@@ -71,14 +71,36 @@ with col2:
     category = st.selectbox("Kategoria", options=["Wszystkie"] + df['category'].dropna().unique().tolist())
 
 with col3:
-    screen_size = st.selectbox("Rozmiar ekranu", options=["Wszystkie"] + df['screen_size'].dropna().unique().tolist())
-    resolution = st.selectbox("Rozdzielczość", options=["Wszystkie"] + df['resolution'].dropna().unique().tolist())
+    if 'screen_size' in df.columns:
+        screen_size = st.selectbox("Rozmiar ekranu", options=["Wszystkie"] + df['screen_size'].dropna().unique().tolist())
+    else:
+        screen_size = "Wszystkie"
+
+    if 'resolution' in df.columns:
+        resolution = st.selectbox("Rozdzielczość", options=["Wszystkie"] + df['resolution'].dropna().unique().tolist())
+    else:
+        resolution = "Wszystkie"
 
 with col4:
-    processor_series = st.selectbox("Seria procesora", options=["Wszystkie"] + df['processor_series'].dropna().unique().tolist())
-    processor = st.selectbox("Procesor", options=["Wszystkie"] + df['processor'].dropna().unique().tolist())
-    touchscreen = st.selectbox("Ekran dotykowy", options=["Wszystkie", "Tak", "Nie"])
-    cores = st.selectbox("Rdzenie", options=["Wszystkie"] + df['cores'].dropna().unique().tolist())
+    if 'processor_series' in df.columns:
+        processor_series = st.selectbox("Seria procesora", options=["Wszystkie"] + df['processor_series'].dropna().unique().tolist())
+    else:
+        processor_series = "Wszystkie"
+
+    if 'processor' in df.columns:
+        processor = st.selectbox("Procesor", options=["Wszystkie"] + df['processor'].dropna().unique().tolist())
+    else:
+        processor = "Wszystkie"
+
+    if 'touchscreen' in df.columns:
+        touchscreen = st.selectbox("Ekran dotykowy", options=["Wszystkie", "Tak", "Nie"])
+    else:
+        touchscreen = "Wszystkie"
+
+    if 'cores' in df.columns:
+        cores = st.selectbox("Rdzenie", options=["Wszystkie"] + df['cores'].dropna().unique().tolist())
+    else:
+        cores = "Wszystkie"
 
 # Pole do wyszukiwania nazwy produktu
 product_name = st.text_input("Wpisz fragment nazwy produktu:")
@@ -90,17 +112,17 @@ if stock_filter:
     query += " AND stock > 0"
 if category != "Wszystkie":
     query += f" AND category = '{category}'"
-if screen_size != "Wszystkie":
+if screen_size != "Wszystkie" and 'screen_size' in df.columns:
     query += f" AND screen_size = '{screen_size}'"
-if resolution != "Wszystkie":
+if resolution != "Wszystkie" and 'resolution' in df.columns:
     query += f" AND resolution = '{resolution}'"
-if processor_series != "Wszystkie":
+if processor_series != "Wszystkie" and 'processor_series' in df.columns:
     query += f" AND processor_series = '{processor_series}'"
-if processor != "Wszystkie":
+if processor != "Wszystkie" and 'processor' in df.columns:
     query += f" AND processor = '{processor}'"
-if touchscreen != "Wszystkie":
+if touchscreen != "Wszystkie" and 'touchscreen' in df.columns:
     query += f" AND TRIM(touchscreen) = '{touchscreen}'"
-if cores != "Wszystkie":
+if cores != "Wszystkie" and 'cores' in df.columns:
     query += f" AND cores = '{cores}'"
 if product_name:
     query += f" AND name LIKE '%{product_name}%'"
