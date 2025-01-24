@@ -39,8 +39,21 @@ for item in root.findall('o'):
     data.append(record)
 
 # Konwersja danych do DataFrame
-df = pd.DataFrame(data)
+df_raw = pd.DataFrame(data)
+
+# Przetwarzanie danych
+df_processed = df_raw.copy()
+
+# Przykładowe przetworzenie danych
+df_processed["active"] = df_processed["stock"].apply(lambda x: 1 if x and x > 0 else 0)
+df_processed["unit"] = "szt."
+df_processed["price"] = df_processed["price"].fillna(0).round(2)
 
 # Wyświetlenie w Streamlit
-st.title("Tabela danych z XML")
-st.dataframe(df, use_container_width=True)
+st.title("Tabele danych z XML")
+
+st.header("Tabela surowych danych")
+st.dataframe(df_raw, use_container_width=True)
+
+st.header("Tabela przetworzonych danych")
+st.dataframe(df_processed, use_container_width=True)
