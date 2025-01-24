@@ -65,6 +65,9 @@ df_processed["price"] = df_processed["price"].fillna(0).round(2)
 # Wybranie tylko określonych kolumn do tabeli przetworzonej
 df_processed = df_processed[[col for col in selected_columns if col in df_processed.columns]]
 
+# Wyświetlenie brakujących kolumn w tabeli przetworzonej
+missing_columns = [col for col in selected_columns if col not in df_processed.columns]
+
 # Wyświetlenie w Streamlit
 st.title("Tabele danych z XML")
 
@@ -73,3 +76,12 @@ st.dataframe(df_raw, use_container_width=True)
 
 st.header("Tabela przetworzonych danych")
 st.dataframe(df_processed, use_container_width=True)
+
+if missing_columns:
+    st.warning("Brakujące kolumny w tabeli przetworzonej:")
+    st.write(missing_columns)
+
+# Wyświetlenie wszystkich kolumn z tabeli surowej
+df_raw_columns = list(df_raw.columns)
+st.header("Kolumny z tabeli surowej")
+st.write(df_raw_columns)
