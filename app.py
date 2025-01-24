@@ -155,7 +155,7 @@ for item in root.findall('o'):
         "short_description": attrs.get("Krótki opis", ""),
         "description": attrs.get("Opis", ""),
         "stock": int(item.get("stock")) if item.get("stock") else None,
-        "availability": "Dostępny" if int(item.get("stock")) > 0 else "Niedostępny",
+        "availability": "auto",
         "delivery": "3 dni",
         "obudowa": attrs.get("Obudowa", "")
     }
