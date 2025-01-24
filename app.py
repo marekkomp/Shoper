@@ -2,13 +2,7 @@ import requests
 import pandas as pd
 import streamlit as st
 import xml.etree.ElementTree as ET
-import json
 import io
-from utils import map_producer, map_gauge
-
-# Wczytanie listy producentów z pliku JSON
-with open("producers.json", "r") as file:
-    producers_map = json.load(file)
 
 # URL do pliku XML
 url = "https://firebasestorage.googleapis.com/v0/b/kompreshop.appspot.com/o/xml%2Fkompre.xml?alt=media"
@@ -24,20 +18,131 @@ else:
 # Wczytanie XML do struktury drzewa
 root = ET.fromstring(xml_data)
 
-# Zbiór wszystkich możliwych kluczy w atrybutach XML
-all_keys = set()
-for item in root.findall('o'):
-    if item.find("attrs") is not None:
-        all_keys.update(attr.get("name") for attr in item.find("attrs").findall("a"))
+# Lista wzorcowych producentów
+producers_map = {
+    "LENOVO": "LENOVO",
+    "FUJITSU": "FUJITSU",
+    "EIZO": "EIZO",
+    "DELL": "DELL",
+    "Toshiba": "Toshiba",
+    "HP": "HP",
+    "EPSON": "EPSON",
+    "SAMSUNG": "SAMSUNG",
+    "NEC": "NEC",
+    "PHILIPS": "PHILIPS",
+    "CODI": "CODI",
+    "Gobi": "Gobi",
+    "PORT": "PORT",
+    "ESPERANZA": "ESPERANZA",
+    "ERICSSON": "ERICSSON",
+    "LG": "LG",
+    "Blupop": "Blupop",
+    "Titanum": "Titanum",
+    "MSONIC": "MSONIC",
+    "TP-LINK": "TP-LINK",
+    "Apple": "Apple",
+    "AOC": "AOC",
+    "MEDIA-TECH": "MEDIA-TECH",
+    "Logitech": "Logitech",
+    "Rebeltec": "Rebeltec",
+    "Natec": "Natec",
+    "Gembird": "Gembird",
+    "Vakoss": "Vakoss",
+    "Tracer": "Tracer",
+    "Manta": "Manta",
+    "4World": "4World",
+    "Creative": "Creative",
+    "GoodRam": "GoodRam",
+    "Maxtor": "Maxtor",
+    "Silicon Power": "Silicon Power",
+    "Koss": "Koss",
+    "Logic": "Logic",
+    "Logic Concept": "Logic Concept",
+    "Microsoft": "Microsoft",
+    "IIYAMA": "IIYAMA",
+    "Green Cell": "Green Cell",
+    "Acer": "Acer",
+    "ViewSonic": "ViewSonic",
+    "Asus": "Asus",
+    "Pioneer": "Pioneer",
+    "HUAWEI": "HUAWEI",
+    "XQISIT": "XQISIT",
+    "HYNIX": "HYNIX",
+    "Xzero": "Xzero",
+    "Art": "Art",
+    "Kingston": "Kingston",
+    "ADATA": "ADATA",
+    "Targus": "Targus",
+    "MOBILIS": "MOBILIS",
+    "Intenso": "Intenso",
+    "Modecom": "Modecom",
+    "UGO": "UGO",
+    "IBOX": "IBOX",
+    "EVEREST": "EVEREST",
+    "PNY": "PNY",
+    "Hitachi": "Hitachi",
+    "Corsair": "Corsair",
+    "Whitenergy": "Whitenergy",
+    "Benq": "Benq",
+    "Gigabyte": "Gigabyte",
+    "AVG": "AVG",
+    "Panasonic": "Panasonic",
+    "Seagate": "Seagate",
+    "WD": "WD",
+    "Novatech": "Novatech"
+}
+
+# Funkcja do dopasowania producenta
+def map_producer(producer_name):
+    if not producer_name:
+        return "Niezdefiniowany"
+    normalized_name = producer_name.strip().upper()
+    for key, value in producers_map.items():
+        if normalized_name == key.upper():
+            return value
+    return "Niezdefiniowany"
+
+# Funkcja do dopasowania gauge
+def map_gauge(row):
+    category = row.get("category", "").strip().lower()
+    obudowa = row.get("obudowa", "").strip().lower()
+
+    if category == "laptopy":
+        return "Laptopy"
+    if obudowa == "desktop":
+        return "Komputer Desktop"
+    if obudowa == "tower":
+        return "Komputer Tower"
+    if obudowa == "all in one":
+        return "AIO"
+    if obudowa == "sff":
+        return "Komputer Desktop SFF"
+    if obudowa in ["micro / mini / tiny", "usff"]:
+        return "Laptopy"
+    if category == "monitory":
+        return "Monitory"
+    if category == "desktop":
+        return "Desktop"
+
+    return "Laptopy"  # Domyślna wartość
 
 # Ekstrakcja danych z XML
 data = []
 for item in root.findall('o'):
-    attrs = {attr.get("name"): attr.text or "" for attr in item.find("attrs").findall("a")} if item.find("attrs") is not None else {}
-    imgs = item.find("imgs")
-    images = [imgs.find("main").get("url")] if imgs is not None and imgs.find("main") else []
-    images += [img.get("url") for img in imgs.findall("i")] if imgs is not None else []
+    # Wydobywanie wszystkich atrybutów z sekcji <attrs>
+    attrs = {attr.get("name"): attr.text for attr in item.find("attrs").findall("a")}
 
+    # Zdjęcia z sekcji <imgs>
+    imgs = item.find("imgs")
+    images = []
+    if imgs is not None:
+        main_img = imgs.find("main")
+        if main_img is not None:
+            images.append(main_img.get("url"))
+        for i, img in enumerate(imgs.findall("i"), start=1):
+            images.append(img.get("url"))
+
+    # Tworzymy słownik z danymi
     record = {
         "product_code": item.get("id"),
         "name": item.find("name").text.strip() if item.find("name") is not None else "",
@@ -45,7 +150,7 @@ for item in root.findall('o'):
         "vat": "23%",
         "unit": "szt.",
         "category": item.find("cat").text.strip() if item.find("cat") is not None else "",
-        "producer": map_producer(attrs.get("Producent", ""), producers_map),
+        "producer": map_producer(attrs.get("Producent", "")),
         "currency": "PLN",
         "priority": 1,
         "short_description": attrs.get("Krótki opis", ""),
@@ -53,24 +158,43 @@ for item in root.findall('o'):
         "stock": int(item.get("stock")) if item.get("stock") else None,
         "availability": "auto",
         "delivery": "3 dni",
-        "obudowa": attrs.get("Obudowa", ""),
+        "obudowa": attrs.get("Obudowa", "")
     }
 
+    # Dodanie obrazów do rekordu
     for i in range(1, 46):
         record[f"images {i}"] = images[i - 1] if i - 1 < len(images) else None
 
-    # Dodanie wszystkich kluczy z XML jako kolumn
-    for key in all_keys:
-        record[key] = attrs.get(key, "")
+    # Dodajemy dynamicznie wszystkie atrybuty z XML jako kolumny
+    record.update(attrs)
 
     data.append(record)
 
 # Konwersja danych do DataFrame
 df_raw = pd.DataFrame(data)
 
+# Lista kolumn, które mają znaleźć się w tabeli przetworzonej
+selected_columns = [
+    "product_code", "active", "name", "price", "vat", "unit", "category", "producer", "currency",
+    "gauge", "priority", "short_description", "description", "stock", "availability", "delivery",
+    "images 1", "images 2", "images 3", "images 4", "images 5", "images 6", "images 7", "images 8",
+    "images 9", "images 10", "images 11", "images 12", "images 13", "images 14", "images 15", "images 16",
+    "images 17", "images 18", "images 19", "images 20", "images 21", "images 22", "images 23", "images 24",
+    "images 25", "images 26", "images 27", "images 28", "images 29", "images 30", "images 31", "images 32",
+    "images 33", "images 34", "images 35", "images 36", "images 37", "images 38", "images 39", "images 40",
+    "images 41", "images 42", "images 43", "images 44", "images 45", "seo_title", "seo_description",
+    "seo_keywords", "booster", "producer_code", "warehouse_code"
+]
+
 # Przetwarzanie danych
 df_processed = df_raw.copy()
+df_processed["name"] = df_processed.apply(generate_name, axis=1)
+
+
+# Dodanie kolumn aktywności i jednostki
 df_processed["active"] = df_processed["stock"].apply(lambda x: 1 if x and x > 0 else 0)
+
+# Wypełnienie kolumn gauge
 df_processed["gauge"] = df_processed.apply(map_gauge, axis=1)
 
 # Wypełnienie kolumn SEO
@@ -90,7 +214,23 @@ def generate_seo_data(row):
 
 df_processed = df_processed.merge(df_processed.apply(generate_seo_data, axis=1), left_index=True, right_index=True)
 
-# Wyświetlenie danych w Streamlit
+# Dodanie brakujących kolumn z pustymi wartościami
+def ensure_columns(df, columns):
+    for col in columns:
+        if col not in df.columns:
+            df[col] = None
+    return df
+
+df_processed = ensure_columns(df_processed, selected_columns)
+
+
+# Wybranie tylko określonych kolumn do tabeli przetworzonej
+df_processed = df_processed[selected_columns]
+
+# Wyświetlenie brakujących kolumn w tabeli przetworzonej
+missing_columns = [col for col in selected_columns if col not in df_raw.columns]
+
+# Wyświetlenie w Streamlit
 st.title("Tabele danych z XML")
 
 st.header("Tabela surowych danych")
@@ -98,29 +238,35 @@ st.dataframe(df_raw, use_container_width=True)
 
 st.header("Tabela przetworzonych danych")
 st.dataframe(df_processed, use_container_width=True)
-
-# Pobieranie tabel jako Excel
-excel_raw = io.BytesIO()
-df_raw.to_excel(excel_raw, index=False, engine="openpyxl")
-excel_raw.seek(0)
-
-excel_processed = io.BytesIO()
-df_processed.to_excel(excel_processed, index=False, engine="openpyxl")
-excel_processed.seek(0)
+excel_buffer = io.BytesIO()
+df_processed.to_excel(excel_buffer, index=False, engine="openpyxl")
+excel_buffer.seek(0)
 
 st.download_button(
-    label="Pobierz surowe dane jako Excel",
-    data=excel_raw,
-    file_name="surowe_dane.xlsx",
-    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-)
-
-st.download_button(
-    label="Pobierz przetworzone dane jako Excel",
-    data=excel_processed,
+    label="Pobierz dane jako Excel",
+    data=excel_buffer,
     file_name="przetworzone_dane.xlsx",
     mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 )
 
+
+if missing_columns:
+    st.warning("Kolumny dodane do tabeli przetworzonej jako puste:")
+    st.write(missing_columns)
+
+# Dodanie przycisku do pobrania Excela
+excel_buffer = io.BytesIO()
+df_processed.to_excel(excel_buffer, index=False, engine="openpyxl")
+excel_buffer.seek(0)
+
+st.download_button(
+    label="Pobierz dane jako Excel",
+    data=excel_buffer,
+    file_name="przetworzone_dane.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
+# Wyświetlenie wszystkich kolumn z tabeli surowej
+df_raw_columns = list(df_raw.columns)
 st.header("Kolumny z tabeli surowej")
-st.write(list(df_raw.columns))
+st.write(df_raw_columns)
