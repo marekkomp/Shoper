@@ -94,12 +94,36 @@ producers_map = {
 # Funkcja do dopasowania producenta
 def map_producer(producer_name):
     if not producer_name:
-        return "Inna marka"
+        return "Niezdefiniowany"
     normalized_name = producer_name.strip().upper()
     for key, value in producers_map.items():
         if normalized_name == key.upper():
             return value
-    return "Inna marka"  # Zwraca "Inna marka", jeśli nie ma dopasowania
+    return "Niezdefiniowany"
+
+# Funkcja do dopasowania gauge
+def map_gauge(row):
+    category = row.get("category", "").strip().lower()
+    obudowa = row.get("obudowa", "").strip().lower()
+
+    if category == "laptopy":
+        return "Laptopy"
+    if obudowa == "desktop":
+        return "Komputer Desktop"
+    if obudowa == "tower":
+        return "Komputer Tower"
+    if obudowa == "all in one":
+        return "AIO"
+    if obudowa == "sff":
+        return "Komputer Desktop SFF"
+    if obudowa in ["micro / mini / tiny", "usff"]:
+        return "Laptopy"
+    if category == "monitory":
+        return "Monitory"
+    if category == "desktop":
+        return "Desktop"
+
+    return None
 
 # Ekstrakcja danych z XML
 data = []
@@ -133,6 +157,7 @@ for item in root.findall('o'):
         "stock": int(item.get("stock")) if item.get("stock") else None,
         "availability": "Dostępny" if int(item.get("stock")) > 0 else "Niedostępny",
         "delivery": "3 dni",
+        "obudowa": attrs.get("Obudowa", "")
     }
 
     # Dodanie obrazów do rekordu
@@ -165,6 +190,9 @@ df_processed = df_raw.copy()
 
 # Dodanie kolumn aktywności i jednostki
 df_processed["active"] = df_processed["stock"].apply(lambda x: 1 if x and x > 0 else 0)
+
+# Wypełnienie kolumn gauge
+df_processed["gauge"] = df_processed.apply(map_gauge, axis=1)
 
 # Wypełnienie kolumn SEO
 def generate_seo_data(row):
