@@ -188,6 +188,8 @@ selected_columns = [
 
 # Przetwarzanie danych
 df_processed = df_raw.copy()
+df_processed["name"] = df_processed.apply(generate_name, axis=1)
+
 
 # Dodanie kolumn aktywności i jednostki
 df_processed["active"] = df_processed["stock"].apply(lambda x: 1 if x and x > 0 else 0)
@@ -221,6 +223,7 @@ def ensure_columns(df, columns):
 
 df_processed = ensure_columns(df_processed, selected_columns)
 
+
 # Wybranie tylko określonych kolumn do tabeli przetworzonej
 df_processed = df_processed[selected_columns]
 
@@ -235,6 +238,17 @@ st.dataframe(df_raw, use_container_width=True)
 
 st.header("Tabela przetworzonych danych")
 st.dataframe(df_processed, use_container_width=True)
+excel_buffer = io.BytesIO()
+df_processed.to_excel(excel_buffer, index=False, engine="openpyxl")
+excel_buffer.seek(0)
+
+st.download_button(
+    label="Pobierz dane jako Excel",
+    data=excel_buffer,
+    file_name="przetworzone_dane.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
+
 
 if missing_columns:
     st.warning("Kolumny dodane do tabeli przetworzonej jako puste:")
