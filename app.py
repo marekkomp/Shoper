@@ -23,15 +23,37 @@ for item in root.findall('o'):
     # Wydobywanie wszystkich atrybutów z sekcji <attrs>
     attrs = {attr.get("name"): attr.text for attr in item.find("attrs").findall("a")}
 
+    # Zdjęcia z sekcji <imgs>
+    imgs = item.find("imgs")
+    images = []
+    if imgs is not None:
+        main_img = imgs.find("main")
+        if main_img is not None:
+            images.append(main_img.get("url"))
+        for i, img in enumerate(imgs.findall("i"), start=1):
+            images.append(img.get("url"))
+
     # Tworzymy słownik z danymi
     record = {
         "product_code": item.get("id"),
         "name": item.find("name").text.strip() if item.find("name") is not None else "",
         "price": float(item.get("price")) if item.get("price") else None,
+        "vat": "23%",
+        "unit": "szt.",
         "category": item.find("cat").text.strip() if item.find("cat") is not None else "",
+        "producer": attrs.get("Producent", ""),
+        "currency": "PLN",
+        "priority": 1,
+        "short_description": attrs.get("Krótki opis", ""),
+        "description": attrs.get("Opis", ""),
         "stock": int(item.get("stock")) if item.get("stock") else None,
         "availability": "Dostępny" if int(item.get("stock")) > 0 else "Niedostępny",
+        "delivery": "3 dni",
     }
+
+    # Dodanie obrazów do rekordu
+    for i in range(1, 46):
+        record[f"images {i}"] = images[i - 1] if i - 1 < len(images) else None
 
     # Dodajemy dynamicznie wszystkie atrybuty z XML jako kolumny
     record.update(attrs)
@@ -59,8 +81,6 @@ df_processed = df_raw.copy()
 
 # Dodanie kolumn aktywności i jednostki
 df_processed["active"] = df_processed["stock"].apply(lambda x: 1 if x and x > 0 else 0)
-df_processed["unit"] = "szt."
-df_processed["price"] = df_processed["price"].fillna(0).round(2)
 
 # Dodanie brakujących kolumn z pustymi wartościami
 def ensure_columns(df, columns):
