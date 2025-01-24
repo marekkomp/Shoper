@@ -2,6 +2,7 @@ import requests
 import pandas as pd
 import streamlit as st
 import xml.etree.ElementTree as ET
+import io
 
 # URL do pliku XML
 url = "https://firebasestorage.googleapis.com/v0/b/kompreshop.appspot.com/o/xml%2Fkompre.xml?alt=media"
@@ -238,6 +239,18 @@ st.dataframe(df_processed, use_container_width=True)
 if missing_columns:
     st.warning("Kolumny dodane do tabeli przetworzonej jako puste:")
     st.write(missing_columns)
+
+# Dodanie przycisku do pobrania Excela
+excel_buffer = io.BytesIO()
+df_processed.to_excel(excel_buffer, index=False, engine="openpyxl")
+excel_buffer.seek(0)
+
+st.download_button(
+    label="Pobierz dane jako Excel",
+    data=excel_buffer,
+    file_name="przetworzone_dane.xlsx",
+    mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+)
 
 # Wyświetlenie wszystkich kolumn z tabeli surowej
 df_raw_columns = list(df_raw.columns)
