@@ -94,12 +94,12 @@ producers_map = {
 # Funkcja do dopasowania producenta
 def map_producer(producer_name):
     if not producer_name:
-        return None
+        return "Inna marka"
     normalized_name = producer_name.strip().upper()
     for key, value in producers_map.items():
         if normalized_name == key.upper():
             return value
-    return producer_name  # Zwraca oryginalną nazwę, jeśli nie ma dopasowania
+    return "Inna marka"  # Zwraca "Inna marka", jeśli nie ma dopasowania
 
 # Ekstrakcja danych z XML
 data = []
