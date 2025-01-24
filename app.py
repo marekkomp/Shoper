@@ -19,7 +19,7 @@ else:
 # Wczytanie XML do struktury drzewa
 root = ET.fromstring(xml_data)
 
-# Ekstrakcja danych z XML
+# Ekstrakcja danych z XML z dodatkowymi kolumnami
 data = []
 for item in root.findall('o'):
     # Wydobywanie wszystkich atrybutów z sekcji <attrs>
@@ -27,16 +27,37 @@ for item in root.findall('o'):
     
     # Tworzymy słownik z danymi, w tym dynamicznie dodane atrybuty
     record = {
-        "id": item.get("id"),
-        "url": item.get("url"),
-        "price": float(item.get("price")),
-        "stock": int(item.get("stock")),
+        "product_code": item.get("id"),  # Można zamienić na właściwy atrybut, jeśli jest inny
+        "active": "True",  # Wartość aktywności produktu, można dostosować
         "name": item.find("name").text.strip() if item.find("name") is not None else "",
+        "price": float(item.get("price")),
+        "vat": "23%",  # Przykładowa wartość VAT, jeśli nie ma w XML
+        "unit": "szt",  # Przykładowa jednostka, można zmienić w zależności od XML
         "category": item.find("cat").text.strip() if item.find("cat") is not None else "",
+        "producer": attrs.get("Producent", ""),  # Przykładowy atrybut "Producent"
+        "currency": "PLN",  # Przykładowa waluta, może być dynamiczna
+        "gauge": attrs.get("Skala", ""),  # Inny przykładowy atrybut
+        "priority": "1",  # Priorytet, jeśli brak w XML, można dodać dynamicznie
+        "short_description": attrs.get("Krótki opis", ""),  # Krótki opis
+        "description": attrs.get("Opis", ""),  # Opis
+        "stock": int(item.get("stock")),
+        "availability": "Dostępny" if int(item.get("stock")) > 0 else "Niedostępny",
+        "delivery": attrs.get("Czas dostawy", "24h"),  # Czas dostawy, jeśli dostępny w XML
     }
     
-    # Dodajemy wszystkie atrybuty z sekcji <attrs>
-    record.update(attrs)
+    # Dodajemy kolumny dla obrazków
+    for i in range(1, 46):
+        record[f"images {i}"] = attrs.get(f"Obrazek {i}", "")  # Jeśli obrazek nie istnieje, będzie pusty
+    
+    # SEO
+    record["seo_title"] = attrs.get("SEO tytuł", "")
+    record["seo_description"] = attrs.get("SEO opis", "")
+    record["seo_keywords"] = attrs.get("SEO słowa kluczowe", "")
+    
+    # Dodatkowe kody
+    record["booster"] = attrs.get("Booster", "")
+    record["producer_code"] = attrs.get("Kod producenta", "")
+    record["warehouse_code"] = attrs.get("Kod magazynowy", "")
     
     data.append(record)
 
@@ -149,30 +170,3 @@ else:
         file_name="glowna_tabela.xlsx",
         mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
-
-# Sekcja dla polecanych produktów
-st.header("Styczeń - najnowsza dostawa i polecane produkty")
-show_recommended = st.checkbox("Pokaż/Ukryj polecane produkty")
-
-# Lista ID polecanych produktów
-recommended_ids = ['279877756', '311442840', '238803967', '230090911']  # Wpisz tutaj ID polecanych produktów
-
-if show_recommended:
-    recommended_data = df[df['id'].isin(recommended_ids)]
-    if not recommended_data.empty:
-        st.write(f"Polecane produkty ({len(recommended_data)} pozycji):")
-        st.dataframe(recommended_data, use_container_width=True)
-
-        # Eksport do Excela dla polecanych produktów
-        excel_buffer_recommended = io.BytesIO()
-        recommended_data.to_excel(excel_buffer_recommended, index=False, engine="openpyxl")
-        excel_buffer_recommended.seek(0)
-
-        st.download_button(
-            label="Pobierz dane jako Excel",
-            data=excel_buffer_recommended,
-            file_name="polecane_produkty.xlsx",
-            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-        )
-    else:
-        st.warning("Brak polecanych produktów do wyświetlenia.")
