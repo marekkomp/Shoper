@@ -123,7 +123,7 @@ def map_gauge(row):
     if category == "desktop":
         return "Desktop"
 
-    return None
+    return "Laptopy"  # Domyślna wartość
 
 # Ekstrakcja danych z XML
 data = []
