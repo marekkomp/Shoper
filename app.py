@@ -17,6 +17,90 @@ else:
 # Wczytanie XML do struktury drzewa
 root = ET.fromstring(xml_data)
 
+# Lista wzorcowych producentów
+producers_map = {
+    "LENOVO": "LENOVO",
+    "FUJITSU": "FUJITSU",
+    "EIZO": "EIZO",
+    "DELL": "DELL",
+    "Toshiba": "Toshiba",
+    "HP": "HP",
+    "EPSON": "EPSON",
+    "SAMSUNG": "SAMSUNG",
+    "NEC": "NEC",
+    "PHILIPS": "PHILIPS",
+    "CODI": "CODI",
+    "Gobi": "Gobi",
+    "PORT": "PORT",
+    "ESPERANZA": "ESPERANZA",
+    "ERICSSON": "ERICSSON",
+    "LG": "LG",
+    "Blupop": "Blupop",
+    "Titanum": "Titanum",
+    "MSONIC": "MSONIC",
+    "TP-LINK": "TP-LINK",
+    "Apple": "Apple",
+    "AOC": "AOC",
+    "MEDIA-TECH": "MEDIA-TECH",
+    "Logitech": "Logitech",
+    "Rebeltec": "Rebeltec",
+    "Natec": "Natec",
+    "Gembird": "Gembird",
+    "Vakoss": "Vakoss",
+    "Tracer": "Tracer",
+    "Manta": "Manta",
+    "4World": "4World",
+    "Creative": "Creative",
+    "GoodRam": "GoodRam",
+    "Maxtor": "Maxtor",
+    "Silicon Power": "Silicon Power",
+    "Koss": "Koss",
+    "Logic": "Logic",
+    "Logic Concept": "Logic Concept",
+    "Microsoft": "Microsoft",
+    "IIYAMA": "IIYAMA",
+    "Green Cell": "Green Cell",
+    "Acer": "Acer",
+    "ViewSonic": "ViewSonic",
+    "Asus": "Asus",
+    "Pioneer": "Pioneer",
+    "HUAWEI": "HUAWEI",
+    "XQISIT": "XQISIT",
+    "HYNIX": "HYNIX",
+    "Xzero": "Xzero",
+    "Art": "Art",
+    "Kingston": "Kingston",
+    "ADATA": "ADATA",
+    "Targus": "Targus",
+    "MOBILIS": "MOBILIS",
+    "Intenso": "Intenso",
+    "Modecom": "Modecom",
+    "UGO": "UGO",
+    "IBOX": "IBOX",
+    "EVEREST": "EVEREST",
+    "PNY": "PNY",
+    "Hitachi": "Hitachi",
+    "Corsair": "Corsair",
+    "Whitenergy": "Whitenergy",
+    "Benq": "Benq",
+    "Gigabyte": "Gigabyte",
+    "AVG": "AVG",
+    "Panasonic": "Panasonic",
+    "Seagate": "Seagate",
+    "WD": "WD",
+    "Novatech": "Novatech"
+}
+
+# Funkcja do dopasowania producenta
+def map_producer(producer_name):
+    if not producer_name:
+        return "Niezdefiniowany"
+    normalized_name = producer_name.strip().upper()
+    for key, value in producers_map.items():
+        if normalized_name == key.upper():
+            return value
+    return "Niezdefiniowany"
+
 # Ekstrakcja danych z XML
 data = []
 for item in root.findall('o'):
@@ -41,7 +125,7 @@ for item in root.findall('o'):
         "vat": "23%",
         "unit": "szt.",
         "category": item.find("cat").text.strip() if item.find("cat") is not None else "",
-        "producer": attrs.get("Producent", ""),
+        "producer": map_producer(attrs.get("Producent", "")),
         "currency": "PLN",
         "priority": 1,
         "short_description": attrs.get("Krótki opis", ""),
