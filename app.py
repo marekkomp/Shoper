@@ -82,6 +82,23 @@ df_processed = df_raw.copy()
 # Dodanie kolumn aktywności i jednostki
 df_processed["active"] = df_processed["stock"].apply(lambda x: 1 if x and x > 0 else 0)
 
+# Wypełnienie kolumn SEO
+def generate_seo_data(row):
+    name = row.get("name", "")
+    category = row.get("category", "")
+    producer = row.get("producer", "")
+    price = row.get("price", "")
+    currency = row.get("currency", "")
+    delivery = row.get("delivery", "")
+
+    seo_title = f"{name} - {category} - {producer}"
+    seo_description = f"Kup {name} w kategorii {category}. Producent: {producer}. Cena: {price} {currency}. Dostawa: {delivery}."
+    seo_keywords = f"{name}, {category}, {producer}, tanie {category}, {name} w dobrej cenie"
+
+    return pd.Series({"seo_title": seo_title, "seo_description": seo_description, "seo_keywords": seo_keywords})
+
+df_processed = df_processed.merge(df_processed.apply(generate_seo_data, axis=1), left_index=True, right_index=True)
+
 # Dodanie brakujących kolumn z pustymi wartościami
 def ensure_columns(df, columns):
     for col in columns:
