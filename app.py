@@ -62,11 +62,20 @@ df_processed["active"] = df_processed["stock"].apply(lambda x: 1 if x and x > 0 
 df_processed["unit"] = "szt."
 df_processed["price"] = df_processed["price"].fillna(0).round(2)
 
+# Dodanie brakujących kolumn z pustymi wartościami
+def ensure_columns(df, columns):
+    for col in columns:
+        if col not in df.columns:
+            df[col] = None
+    return df
+
+df_processed = ensure_columns(df_processed, selected_columns)
+
 # Wybranie tylko określonych kolumn do tabeli przetworzonej
-df_processed = df_processed[[col for col in selected_columns if col in df_processed.columns]]
+df_processed = df_processed[selected_columns]
 
 # Wyświetlenie brakujących kolumn w tabeli przetworzonej
-missing_columns = [col for col in selected_columns if col not in df_processed.columns]
+missing_columns = [col for col in selected_columns if col not in df_raw.columns]
 
 # Wyświetlenie w Streamlit
 st.title("Tabele danych z XML")
@@ -78,7 +87,7 @@ st.header("Tabela przetworzonych danych")
 st.dataframe(df_processed, use_container_width=True)
 
 if missing_columns:
-    st.warning("Brakujące kolumny w tabeli przetworzonej:")
+    st.warning("Kolumny dodane do tabeli przetworzonej jako puste:")
     st.write(missing_columns)
 
 # Wyświetlenie wszystkich kolumn z tabeli surowej
