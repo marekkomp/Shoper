@@ -100,6 +100,29 @@ selected_columns = [
 ]
 
 df_processed = ensure_columns(df_processed, selected_columns)
+
+# Przetwarzanie kolumny "name" w tabeli przetworzonej
+def generate_name(row):
+    category = row.get("category", "").strip().lower()
+    if category in ["laptopy", "komputery"]:
+        category = "Laptop"
+
+    parts = [
+        category.capitalize() if category else None,
+        row.get("producer"),
+        row.get("Ilość Pamięci RAM"),
+        row.get("Dysk"),
+        row.get("typ dysku"),
+        row.get("Procesor"),
+        row.get("Typ Matrycy"),
+        row.get("Przekątna ekranu"),
+        row.get("Rozdzielczość ekranu")
+    ]
+    return " ".join(filter(None, parts))
+
+df_processed["name"] = df_processed.apply(generate_name, axis=1)
+
+# Wybranie przetworzonych kolumn
 df_processed = df_processed[selected_columns]
 
 # Wyświetlenie danych w Streamlit
