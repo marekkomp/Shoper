@@ -35,9 +35,9 @@ def parse_xml_to_df(xml_root):
 
 # Połącz dane XML i Excel i zaktualizuj kolumnę "name"
 def merge_and_update_name(xml_df, excel_df):
-    # Upewnij się, że kolumna product_code ma ten sam typ danych
+    # Upewnij się, że kolumna product_code ma ten sam typ danych i usuń `.0`
     xml_df["product_code"] = xml_df["product_code"].astype(str)
-    excel_df["product_code"] = excel_df["product_code"].astype(str)
+    excel_df["product_code"] = excel_df["product_code"].astype(str).str.replace("\.0$", "", regex=True)
 
     merged_df = excel_df.merge(xml_df, on="product_code", how="left")
 
