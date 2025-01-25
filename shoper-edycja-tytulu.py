@@ -53,7 +53,7 @@ def process_data(xml_df, excel_df):
         return " ".join(components).replace("\n", " ").replace("\r", " ")
 
     # Kategorii do modyfikacji
-    categories_to_modify = ["Laptopy", "Monitory", "AIO", "Tablety"]
+    categories_to_modify = ["Komputery", "Laptopy", "Monitory", "Tablety"]
 
     # Aktualizuj tylko dla wybranych kategorii
     merged_df["name"] = merged_df.apply(
