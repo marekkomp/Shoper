@@ -43,6 +43,12 @@ def process_data(xml_df, excel_df):
     # Połączenie danych
     merged_df = excel_df.merge(xml_df, on="product_code", how="left")
 
+    # Upewnij się, że kolumna 'category' istnieje i brakujące wartości są obsłużone
+    if "category" not in merged_df.columns:
+        merged_df["category"] = None
+
+    merged_df["category"] = merged_df["category"].fillna("Inne")
+
     # Generowanie kolumny name dla wybranych kategorii
     def generate_name(row):
         columns = [
@@ -57,7 +63,7 @@ def process_data(xml_df, excel_df):
 
     # Aktualizuj tylko dla wybranych kategorii
     merged_df["name"] = merged_df.apply(
-        lambda row: generate_name(row) if row["category"] in categories_to_modify else row["name"], axis=1
+        lambda row: generate_name(row) if row["category"] in categories_to_modify else row.get("name", None), axis=1
     )
 
     # Zaktualizuj kolumnę name w oryginalnym DataFrame
