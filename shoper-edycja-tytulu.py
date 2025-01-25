@@ -51,6 +51,11 @@ def merge_and_update_name(xml_df, excel_df):
 
     # Aktualizuj tylko kolumnę "name" w oryginalnym Excelu
     excel_df["name"] = merged_df.apply(generate_name, axis=1)
+
+    # Sprawdź, czy jakiekolwiek wartości zostały zaktualizowane
+    if excel_df["name"].isnull().all():
+        st.warning("Brak dopasowań między danymi w XML i Excel. Upewnij się, że kolumna 'product_code' jest zgodna.")
+
     return excel_df
 
 # Streamlit aplikacja
