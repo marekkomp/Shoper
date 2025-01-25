@@ -18,7 +18,7 @@ def parse_xml_to_df(xml_root):
     data = []
     for offer in xml_root.findall(".//o"):
         record = {
-            "ID": offer.get("id"),
+            "product_code": offer.get("id"),
             "category": offer.findtext("cat"),
             "Producent": offer.find("attrs/a[@name='Producent']").text if offer.find("attrs/a[@name='Producent']") else None,
             "Kod producenta": offer.find("attrs/a[@name='Kod producenta']").text if offer.find("attrs/a[@name='Kod producenta']") else None,
@@ -35,7 +35,7 @@ def parse_xml_to_df(xml_root):
 
 # Połącz dane XML i Excel i zaktualizuj kolumnę "name"
 def merge_and_update_name(xml_df, excel_df):
-    merged_df = excel_df.merge(xml_df, on="ID", how="left")
+    merged_df = excel_df.merge(xml_df, on="product_code", how="left")
 
     def generate_name(row):
         components = [
@@ -57,9 +57,9 @@ uploaded_file = st.file_uploader("Wgraj plik Excel", type=["xlsx"])
 if uploaded_file:
     excel_df = pd.read_excel(uploaded_file)
 
-    # Sprawdź, czy plik zawiera kolumnę ID
-    if "ID" not in excel_df.columns:
-        st.error("Plik Excel musi zawierać kolumnę 'ID'.")
+    # Sprawdź, czy plik zawiera kolumnę product_code
+    if "product_code" not in excel_df.columns:
+        st.error("Plik Excel musi zawierać kolumnę 'product_code'.")
     else:
         # Pobierz i przetwórz dane XML
         st.info("Pobieranie danych z XML...")
