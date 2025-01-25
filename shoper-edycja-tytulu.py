@@ -73,6 +73,10 @@ if uploaded_file:
         st.info("Aktualizowanie kolumny 'name'...")
         updated_df = merge_and_update_name(xml_df, excel_df)
 
+        # Wyświetl zmienioną tabelę
+        st.write("Podgląd zmienionej tabeli:")
+        st.dataframe(updated_df)
+
         # Przygotuj plik do pobrania
         output = BytesIO()
         updated_df.to_excel(output, index=False, engine='openpyxl')
