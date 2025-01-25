@@ -34,7 +34,7 @@ def parse_xml_to_df(xml_root):
             "Typ matrycy": attrs.get("Typ matrycy"),
         }
         data.append(record)
-    st.write("Przetworzone dane XML:", data)
+    st.write("Przetworzone dane XML:", pd.DataFrame(data))  # Debugowanie
     return pd.DataFrame(data)
 
 # Przetwórz dane z XML i Excel
