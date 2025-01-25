@@ -17,10 +17,10 @@ def fetch_xml_data(url):
 def parse_xml_to_df(xml_root):
     data = []
     for offer in xml_root.findall(".//o"):
-        attrs = {a.get("name"): a.text for a in offer.findall("attrs/a")}
+        attrs = {a.get("name"): a.text.strip() for a in offer.findall("attrs/a")}
         record = {
             "product_code": offer.get("id"),
-            "category": offer.findtext("cat"),
+            "category": offer.findtext("cat").strip() if offer.findtext("cat") else None,
             "Producent": attrs.get("Producent"),
             "Kod producenta": attrs.get("Kod producenta"),
             "dysk": attrs.get("Dysk"),
@@ -67,8 +67,8 @@ def process_single_product(xml_df, excel_df, single_code):
             "category", "Producent", "Kod producenta", "dysk", "typ dysku", 
             "pamięć ram", "Procesor", "Rozdzielczość ekranu", "Przekątna ekranu", "Typ matrycy"
         ]
-        components = [row[col] for col in columns if col in row.index and pd.notnull(row[col])]
-        return " ".join(str(c) for c in components if c)
+        components = [str(row[col]).strip() for col in columns if col in row.index and pd.notnull(row[col])]
+        return " ".join(components).replace("\n", " ").replace("\r", " ")
 
     # Aktualizuj kolumnę name tylko dla jednej wartości
     filtered_excel.loc[:, "name"] = merged_df.apply(generate_name, axis=1)
