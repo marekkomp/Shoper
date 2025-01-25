@@ -43,6 +43,12 @@ def process_single_product(xml_df, excel_df, single_code):
     filtered_excel = excel_df[excel_df["product_code"] == single_code]
     filtered_xml = xml_df[xml_df["product_code"] == single_code]
 
+    # Debug: Wyświetl dane filtrowane
+    st.write("Dane Excel dla product_code:")
+    st.dataframe(filtered_excel)
+    st.write("Dane XML dla product_code:")
+    st.dataframe(filtered_xml)
+
     # Sprawdź, czy dane istnieją w obu źródłach
     if filtered_excel.empty:
         st.warning(f"Brak danych w Excel dla product_code: {single_code}")
@@ -65,6 +71,10 @@ def process_single_product(xml_df, excel_df, single_code):
 
     # Aktualizuj kolumnę name tylko dla jednej wartości
     filtered_excel["name"] = merged_df.apply(generate_name, axis=1)
+
+    # Debug: Wyświetl wynik generowania name
+    st.write("Wynik generowania kolumny 'name':")
+    st.dataframe(filtered_excel[["product_code", "name"]])
 
     # Zaktualizuj oryginalny DataFrame
     excel_df.update(filtered_excel)
