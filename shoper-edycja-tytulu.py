@@ -43,6 +43,9 @@ def process_data(xml_df, excel_df):
     # Połączenie danych
     merged_df = excel_df.merge(xml_df, on="product_code", how="left")
 
+    # Skrócenie kolumny Procesor do 9 pierwszych liter
+    merged_df["Procesor"] = merged_df["Procesor"].apply(lambda x: x[:9] if isinstance(x, str) else x)
+
     # Generowanie kolumny name
     def generate_name(row):
         columns = [
