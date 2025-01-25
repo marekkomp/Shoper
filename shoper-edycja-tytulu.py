@@ -42,12 +42,11 @@ def merge_and_update_name(xml_df, excel_df):
     merged_df = excel_df.merge(xml_df, on="product_code", how="left")
 
     def generate_name(row):
-        components = [
-            row["category"], row["Producent"], row["Kod producenta"],
-            row["dysk"], row["typ dysku"], row["pamięć ram"],
-            row["Procesor"], row["Rozdzielczość ekranu"],
-            row["Przekątna ekranu"], row["Typ matrycy"]
+        columns = [
+            "category", "Producent", "Kod producenta", "dysk", "typ dysku", 
+            "pamięć ram", "Procesor", "Rozdzielczość ekranu", "Przekątna ekranu", "Typ matrycy"
         ]
+        components = [row[col] for col in columns if col in row.index and pd.notnull(row[col])]
         return " ".join([str(c) for c in components if c])
 
     merged_df["name"] = merged_df.apply(generate_name, axis=1)
