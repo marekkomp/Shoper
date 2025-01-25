@@ -17,17 +17,10 @@ def fetch_xml_data(url):
 def parse_xml_to_df(xml_root):
     data = []
     for offer in xml_root.findall(".//o"):
-        # Odczyt kategorii z debugowaniem
-        category = offer.findtext("cat")
-        if category is None:
-            print(f"Uwaga: brak kategorii dla ID: {offer.get('id')}")
-        else:
-            category = category.strip()  # Usuń nadmiarowe spacje
-        
         attrs = {a.get("name"): a.text.strip() for a in offer.findall("attrs/a")}
         record = {
             "product_code": offer.get("id"),
-            "category": category or "Brak kategorii",  # Domyślna wartość, jeśli brak kategorii
+            "category": offer.findtext("cat").strip() if offer.findtext("cat") else None,
             "Producent": attrs.get("Producent"),
             "Kod producenta": attrs.get("Kod producenta"),
             "dysk": attrs.get("Dysk"),
@@ -56,21 +49,19 @@ def process_data(xml_df, excel_df):
     # Generowanie kolumny name
     def generate_name(row):
         columns = [
-            "category",  # Kategoria jako pierwszy element
-            "Producent", 
-            "Kod producenta", 
-            "Procesor", 
-            "pamięć ram", 
-            "dysk", 
-            "typ dysku", 
-            "Rozdzielczość ekranu", 
-            "Przekątna ekranu", 
-            "Typ matrycy"
+            "Producent", "Kod producenta", "Procesor", 
+            "pamięć ram", "dysk", "typ dysku", 
+            "Rozdzielczość ekranu", "Przekątna ekranu", "Typ matrycy"
         ]
         components = [str(row[col]).strip() for col in columns if col in row.index and pd.notnull(row[col])]
         return " ".join(components).replace("\n", " ").replace("\r", " ")
 
     merged_df["name"] = merged_df.apply(generate_name, axis=1)
+
+    # Dodaj kategorię z Excela na początek kolumny name
+    merged_df["name"] = merged_df.apply(
+        lambda row: f"{row['category']} {row['name']}" if pd.notnull(row['category']) else row["name"], axis=1
+    )
 
     # Zaktualizuj kolumnę name w oryginalnym DataFrame
     excel_df["name"] = merged_df["name"]
