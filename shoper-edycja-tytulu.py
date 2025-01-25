@@ -68,10 +68,10 @@ def process_single_product(xml_df, excel_df, single_code):
             "pamięć ram", "Procesor", "Rozdzielczość ekranu", "Przekątna ekranu", "Typ matrycy"
         ]
         components = [row[col] for col in columns if col in row.index and pd.notnull(row[col])]
-        return " ".join([str(c) for c in components if c])
+        return " ".join(str(c) for c in components if c)
 
     # Aktualizuj kolumnę name tylko dla jednej wartości
-    filtered_excel["name"] = merged_df.apply(generate_name, axis=1)
+    filtered_excel.loc[:, "name"] = merged_df.apply(generate_name, axis=1)
 
     # Debug: Wyświetl wynik generowania name
     st.write("Wynik generowania kolumny 'name':")
