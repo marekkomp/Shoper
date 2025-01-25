@@ -33,17 +33,27 @@ def parse_xml_to_df(xml_root):
         data.append(record)
     return pd.DataFrame(data)
 
-# Połącz dane XML i Excel i zaktualizuj kolumnę "name"
-def merge_and_update_name(xml_df, excel_df):
+# Przetwórz jedną wartość product_code
+def process_single_product(xml_df, excel_df, single_code):
     # Upewnij się, że kolumna product_code ma ten sam typ danych i usuń `.0`
     xml_df["product_code"] = xml_df["product_code"].astype(str)
     excel_df["product_code"] = excel_df["product_code"].astype(str).str.replace("\.0$", "", regex=True)
 
-    merged_df = excel_df.merge(xml_df, on="product_code", how="left")
+    # Filtruj dane dla jednego product_code
+    filtered_excel = excel_df[excel_df["product_code"] == single_code]
+    filtered_xml = xml_df[xml_df["product_code"] == single_code]
 
-    # Debug: Wyświetl połączony DataFrame
-    st.write("Połączony DataFrame:")
-    st.dataframe(merged_df)
+    # Sprawdź, czy dane istnieją w obu źródłach
+    if filtered_excel.empty:
+        st.warning(f"Brak danych w Excel dla product_code: {single_code}")
+        return excel_df
+
+    if filtered_xml.empty:
+        st.warning(f"Brak danych w XML dla product_code: {single_code}")
+        return excel_df
+
+    # Połącz dane i wygeneruj name
+    merged_df = filtered_excel.merge(filtered_xml, on="product_code", how="left")
 
     def generate_name(row):
         columns = [
@@ -53,17 +63,16 @@ def merge_and_update_name(xml_df, excel_df):
         components = [row[col] for col in columns if col in row.index and pd.notnull(row[col])]
         return " ".join([str(c) for c in components if c])
 
-    # Aktualizuj tylko kolumnę "name" w oryginalnym Excelu
-    excel_df["name"] = merged_df.apply(generate_name, axis=1)
+    # Aktualizuj kolumnę name tylko dla jednej wartości
+    filtered_excel["name"] = merged_df.apply(generate_name, axis=1)
 
-    # Sprawdź, czy jakiekolwiek wartości zostały zaktualizowane
-    if excel_df["name"].isnull().all():
-        st.warning("Brak dopasowań między danymi w XML i Excel. Upewnij się, że kolumna 'product_code' jest zgodna.")
+    # Zaktualizuj oryginalny DataFrame
+    excel_df.update(filtered_excel)
 
     return excel_df
 
 # Streamlit aplikacja
-st.title("Aktualizacja kolumny 'name' na podstawie XML")
+st.title("Testowanie pojedynczego product_code")
 
 # Wybierz plik Excel
 uploaded_file = st.file_uploader("Wgraj plik Excel", type=["xlsx"])
@@ -79,12 +88,12 @@ if uploaded_file:
         xml_root = fetch_xml_data(XML_URL)
         xml_df = parse_xml_to_df(xml_root)
 
-        # Połącz dane i zaktualizuj kolumnę "name"
-        st.info("Aktualizowanie kolumny 'name'...")
-        updated_df = merge_and_update_name(xml_df, excel_df)
+        # Testuj dla jednej wartości product_code
+        single_code = st.text_input("Podaj product_code do przetestowania", "229381687")
+        updated_df = process_single_product(xml_df, excel_df, single_code)
 
         # Wyświetl zmienioną tabelę
-        st.write("Podgląd zmienionej tabeli:")
+        st.write("Podgląd zmienionej tabeli dla pojedynczego product_code:")
         st.dataframe(updated_df)
 
         # Przygotuj plik do pobrania
@@ -96,6 +105,6 @@ if uploaded_file:
         st.download_button(
             label="Pobierz zaktualizowany plik Excel",
             data=output,
-            file_name="updated_excel.xlsx",
+            file_name="updated_single_excel.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
