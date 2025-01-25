@@ -49,8 +49,9 @@ def process_data(xml_df, excel_df):
     # Generowanie kolumny name
     def generate_name(row):
         columns = [
-            "category", "Producent", "Kod producenta", "dysk", "typ dysku", 
-            "pamięć ram", "Procesor", "Rozdzielczość ekranu", "Przekątna ekranu", "Typ matrycy"
+            "category", "Producent", "Kod producenta", "Procesor", 
+            "pamięć ram", "dysk", "typ dysku", 
+            "Rozdzielczość ekranu", "Przekątna ekranu", "Typ matrycy"
         ]
         components = [str(row[col]).strip() for col in columns if col in row.index and pd.notnull(row[col])]
         return " ".join(components).replace("\n", " ").replace("\r", " ")
