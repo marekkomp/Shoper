@@ -1,3 +1,4 @@
+
 import pandas as pd
 import streamlit as st
 import requests
@@ -36,7 +37,7 @@ def parse_xml_to_df(xml_root):
 
 # Przetwórz dane z XML i Excel
 def process_data(xml_df, excel_df):
-    # Dopasowanie typów danych i usunięcie `.0`
+    # Dopasowanie typów danych i usunięcie .0
     xml_df["product_code"] = xml_df["product_code"].astype(str)
     excel_df["product_code"] = excel_df["product_code"].astype(str).str.replace("\.0$", "", regex=True)
 
@@ -49,7 +50,7 @@ def process_data(xml_df, excel_df):
     # Generowanie kolumny name
     def generate_name(row):
         columns = [
-            "Producent", "Kod producenta", "Procesor", 
+            "category", "Producent", "Kod producenta", "Procesor", 
             "pamięć ram", "dysk", "typ dysku", 
             "Rozdzielczość ekranu", "Przekątna ekranu", "Typ matrycy"
         ]
@@ -57,11 +58,6 @@ def process_data(xml_df, excel_df):
         return " ".join(components).replace("\n", " ").replace("\r", " ")
 
     merged_df["name"] = merged_df.apply(generate_name, axis=1)
-
-    # Dodaj kategorię z Excela na początek kolumny name
-    merged_df["name"] = merged_df.apply(
-        lambda row: f"{row['category']} {row['name']}" if pd.notnull(row['category']) else row["name"], axis=1
-    )
 
     # Zaktualizuj kolumnę name w oryginalnym DataFrame
     excel_df["name"] = merged_df["name"]
