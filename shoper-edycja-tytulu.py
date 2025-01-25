@@ -17,18 +17,19 @@ def fetch_xml_data(url):
 def parse_xml_to_df(xml_root):
     data = []
     for offer in xml_root.findall(".//o"):
+        attrs = {a.get("name"): a.text for a in offer.findall("attrs/a")}
         record = {
             "product_code": offer.get("id"),
             "category": offer.findtext("cat"),
-            "Producent": offer.find("attrs/a[@name='Producent']").text if offer.find("attrs/a[@name='Producent']") else None,
-            "Kod producenta": offer.find("attrs/a[@name='Kod producenta']").text if offer.find("attrs/a[@name='Kod producenta']") else None,
-            "dysk": offer.find("attrs/a[@name='Dysk']").text if offer.find("attrs/a[@name='Dysk']") else None,
-            "typ dysku": offer.find("attrs/a[@name='Typ dysku']").text if offer.find("attrs/a[@name='Typ dysku']") else None,
-            "pamięć ram": offer.find("attrs/a[@name='Ilość pamięci RAM']").text if offer.find("attrs/a[@name='Ilość pamięci RAM']") else None,
-            "Procesor": offer.find("attrs/a[@name='Procesor']").text if offer.find("attrs/a[@name='Procesor']") else None,
-            "Rozdzielczość ekranu": offer.find("attrs/a[@name='Rozdzielczość ekranu']").text if offer.find("attrs/a[@name='Rozdzielczość ekranu']") else None,
-            "Przekątna ekranu": offer.find("attrs/a[@name='Przekątna ekranu']").text if offer.find("attrs/a[@name='Przekątna ekranu']") else None,
-            "Typ matrycy": offer.find("attrs/a[@name='Powłoka matrycy']").text if offer.find("attrs/a[@name='Powłoka matrycy']") else None,
+            "Producent": attrs.get("Producent"),
+            "Kod producenta": attrs.get("Kod producenta"),
+            "dysk": attrs.get("Dysk"),
+            "typ dysku": attrs.get("Typ dysku"),
+            "pamięć ram": attrs.get("Ilość pamięci RAM"),
+            "Procesor": attrs.get("Procesor"),
+            "Rozdzielczość ekranu": attrs.get("Rozdzielczość ekranu"),
+            "Przekątna ekranu": attrs.get("Przekątna ekranu"),
+            "Typ matrycy": attrs.get("Powłoka matrycy"),
         }
         data.append(record)
     return pd.DataFrame(data)
