@@ -41,6 +41,10 @@ def merge_and_update_name(xml_df, excel_df):
 
     merged_df = excel_df.merge(xml_df, on="product_code", how="left")
 
+    # Debug: Wyświetl połączony DataFrame
+    st.write("Połączony DataFrame:")
+    st.dataframe(merged_df)
+
     def generate_name(row):
         columns = [
             "category", "Producent", "Kod producenta", "dysk", "typ dysku", 
