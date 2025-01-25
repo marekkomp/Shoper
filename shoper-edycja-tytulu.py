@@ -55,9 +55,12 @@ def process_data(xml_df, excel_df):
         return " ".join(components).replace("\n", " ").replace("\r", " ")
 
     # Aktualizuj kolumnę name tylko dla wybranych kategorii
-    merged_df["name"] = merged_df.apply(
-        lambda row: generate_name(row) if row["category"] in allowed_categories else row["name"], axis=1
-    )
+    if "category" in merged_df.columns:
+        merged_df["name"] = merged_df.apply(
+            lambda row: generate_name(row) if row["category"] in allowed_categories else row.get("name"), axis=1
+        )
+    else:
+        st.warning("Kolumna 'category' nie została znaleziona w danych XML.")
 
     # Zaktualizuj kolumnę name w oryginalnym DataFrame
     excel_df["name"] = merged_df["name"]
