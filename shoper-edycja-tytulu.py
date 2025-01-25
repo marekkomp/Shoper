@@ -49,8 +49,9 @@ def merge_and_update_name(xml_df, excel_df):
         components = [row[col] for col in columns if col in row.index and pd.notnull(row[col])]
         return " ".join([str(c) for c in components if c])
 
-    merged_df["name"] = merged_df.apply(generate_name, axis=1)
-    return merged_df
+    # Aktualizuj tylko kolumnę "name" w oryginalnym Excelu
+    excel_df["name"] = merged_df.apply(generate_name, axis=1)
+    return excel_df
 
 # Streamlit aplikacja
 st.title("Aktualizacja kolumny 'name' na podstawie XML")
