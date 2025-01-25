@@ -17,10 +17,17 @@ def fetch_xml_data(url):
 def parse_xml_to_df(xml_root):
     data = []
     for offer in xml_root.findall(".//o"):
+        # Odczyt kategorii z debugowaniem
+        category = offer.findtext("cat")
+        if category is None:
+            print(f"Uwaga: brak kategorii dla ID: {offer.get('id')}")
+        else:
+            category = category.strip()  # Usuń nadmiarowe spacje
+        
         attrs = {a.get("name"): a.text.strip() for a in offer.findall("attrs/a")}
         record = {
             "product_code": offer.get("id"),
-            "category": offer.findtext("cat").strip() if offer.findtext("cat") else None,  # Pobranie kategorii
+            "category": category or "Brak kategorii",  # Domyślna wartość, jeśli brak kategorii
             "Producent": attrs.get("Producent"),
             "Kod producenta": attrs.get("Kod producenta"),
             "dysk": attrs.get("Dysk"),
