@@ -18,11 +18,9 @@ def parse_xml_to_df(xml_root):
     data = []
     for offer in xml_root.findall(".//o"):
         attrs = {a.get("name"): a.text.strip() for a in offer.findall("attrs/a")}
-        category_element = offer.find("cat")
-        category = category_element.text.strip() if category_element is not None else None
         record = {
             "product_code": offer.get("id"),
-            "category": category,
+            "category": offer.findtext("cat").strip() if offer.findtext("cat") else None,
             "Producent": attrs.get("Producent"),
             "Kod producenta": attrs.get("Kod producenta"),
             "dysk": attrs.get("Dysk"),
@@ -34,7 +32,6 @@ def parse_xml_to_df(xml_root):
             "Typ matrycy": attrs.get("Typ matrycy"),
         }
         data.append(record)
-    st.write("Przetworzone dane XML:", pd.DataFrame(data))  # Debugowanie
     return pd.DataFrame(data)
 
 # Przetwórz dane z XML i Excel
@@ -46,9 +43,7 @@ def process_data(xml_df, excel_df):
     # Połączenie danych
     merged_df = excel_df.merge(xml_df, on="product_code", how="left")
 
-    # Generowanie kolumny name tylko dla wybranych kategorii
-    allowed_categories = ["Komputery", "Laptopy", "Monitory", "Tablety"]
-
+    # Generowanie kolumny name
     def generate_name(row):
         columns = [
             "category", "Producent", "Kod producenta", "dysk", "typ dysku", 
@@ -57,13 +52,7 @@ def process_data(xml_df, excel_df):
         components = [str(row[col]).strip() for col in columns if col in row.index and pd.notnull(row[col])]
         return " ".join(components).replace("\n", " ").replace("\r", " ")
 
-    # Aktualizuj kolumnę name tylko dla wybranych kategorii
-    if "category" in merged_df.columns:
-        merged_df["name"] = merged_df.apply(
-            lambda row: generate_name(row) if row["category"] in allowed_categories else row.get("name"), axis=1
-        )
-    else:
-        st.warning("Kolumna 'category' nie została znaleziona w danych XML.")
+    merged_df["name"] = merged_df.apply(generate_name, axis=1)
 
     # Zaktualizuj kolumnę name w oryginalnym DataFrame
     excel_df["name"] = merged_df["name"]
