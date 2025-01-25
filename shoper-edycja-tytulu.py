@@ -34,34 +34,16 @@ def parse_xml_to_df(xml_root):
         data.append(record)
     return pd.DataFrame(data)
 
-# Przetwórz jedną wartość product_code
-def process_single_product(xml_df, excel_df, single_code):
-    # Upewnij się, że kolumna product_code ma ten sam typ danych i usuń `.0`
+# Przetwórz dane z XML i Excel
+def process_data(xml_df, excel_df):
+    # Dopasowanie typów danych i usunięcie `.0`
     xml_df["product_code"] = xml_df["product_code"].astype(str)
     excel_df["product_code"] = excel_df["product_code"].astype(str).str.replace("\.0$", "", regex=True)
 
-    # Filtruj dane dla jednego product_code
-    filtered_excel = excel_df[excel_df["product_code"] == single_code]
-    filtered_xml = xml_df[xml_df["product_code"] == single_code]
+    # Połączenie danych
+    merged_df = excel_df.merge(xml_df, on="product_code", how="left")
 
-    # Debug: Wyświetl dane filtrowane
-    st.write("Dane Excel dla product_code:")
-    st.dataframe(filtered_excel)
-    st.write("Dane XML dla product_code:")
-    st.dataframe(filtered_xml)
-
-    # Sprawdź, czy dane istnieją w obu źródłach
-    if filtered_excel.empty:
-        st.warning(f"Brak danych w Excel dla product_code: {single_code}")
-        return excel_df
-
-    if filtered_xml.empty:
-        st.warning(f"Brak danych w XML dla product_code: {single_code}")
-        return excel_df
-
-    # Połącz dane i wygeneruj name
-    merged_df = filtered_excel.merge(filtered_xml, on="product_code", how="left")
-
+    # Generowanie kolumny name
     def generate_name(row):
         columns = [
             "category", "Producent", "Kod producenta", "dysk", "typ dysku", 
@@ -70,20 +52,14 @@ def process_single_product(xml_df, excel_df, single_code):
         components = [str(row[col]).strip() for col in columns if col in row.index and pd.notnull(row[col])]
         return " ".join(components).replace("\n", " ").replace("\r", " ")
 
-    # Aktualizuj kolumnę name tylko dla jednej wartości
-    filtered_excel.loc[:, "name"] = merged_df.apply(generate_name, axis=1)
+    merged_df["name"] = merged_df.apply(generate_name, axis=1)
 
-    # Debug: Wyświetl wynik generowania name
-    st.write("Wynik generowania kolumny 'name':")
-    st.dataframe(filtered_excel[["product_code", "name"]])
-
-    # Zaktualizuj oryginalny DataFrame
-    excel_df.update(filtered_excel)
-
+    # Zaktualizuj kolumnę name w oryginalnym DataFrame
+    excel_df["name"] = merged_df["name"]
     return excel_df
 
 # Streamlit aplikacja
-st.title("Testowanie pojedynczego product_code")
+st.title("XML + Excel Merger")
 
 # Wybierz plik Excel
 uploaded_file = st.file_uploader("Wgraj plik Excel", type=["xlsx"])
@@ -99,12 +75,12 @@ if uploaded_file:
         xml_root = fetch_xml_data(XML_URL)
         xml_df = parse_xml_to_df(xml_root)
 
-        # Testuj dla jednej wartości product_code
-        single_code = st.text_input("Podaj product_code do przetestowania", "229381687")
-        updated_df = process_single_product(xml_df, excel_df, single_code)
+        # Przetwórz dane
+        st.info("Przetwarzanie danych...")
+        updated_df = process_data(xml_df, excel_df)
 
         # Wyświetl zmienioną tabelę
-        st.write("Podgląd zmienionej tabeli dla pojedynczego product_code:")
+        st.write("Podgląd zmienionej tabeli:")
         st.dataframe(updated_df)
 
         # Przygotuj plik do pobrania
@@ -116,6 +92,6 @@ if uploaded_file:
         st.download_button(
             label="Pobierz zaktualizowany plik Excel",
             data=output,
-            file_name="updated_single_excel.xlsx",
+            file_name="updated_excel.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
