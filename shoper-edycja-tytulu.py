@@ -29,7 +29,7 @@ def parse_xml_to_df(xml_root):
             "Procesor": attrs.get("Procesor"),
             "Rozdzielczość ekranu": attrs.get("Rozdzielczość ekranu"),
             "Przekątna ekranu": attrs.get("Przekątna ekranu"),
-            "Typ matrycy": attrs.get("Powłoka matrycy"),
+            "Typ matrycy": attrs.get("Typ matrycy"),
         }
         data.append(record)
     return pd.DataFrame(data)
