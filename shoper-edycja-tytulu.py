@@ -18,9 +18,10 @@ def parse_xml_to_df(xml_root):
     data = []
     for offer in xml_root.findall(".//o"):
         attrs = {a.get("name"): a.text.strip() for a in offer.findall("attrs/a")}
+        category = offer.find("cat")
         record = {
             "product_code": offer.get("id"),
-            "category": offer.findtext("cat").strip() if offer.findtext("cat") else None,
+            "category": category.text.strip() if category is not None else None,
             "Producent": attrs.get("Producent"),
             "Kod producenta": attrs.get("Kod producenta"),
             "dysk": attrs.get("Dysk"),
