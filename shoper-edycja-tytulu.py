@@ -18,10 +18,11 @@ def parse_xml_to_df(xml_root):
     data = []
     for offer in xml_root.findall(".//o"):
         attrs = {a.get("name"): a.text.strip() for a in offer.findall("attrs/a")}
-        category = offer.find("cat")
+        category_element = offer.find("cat")
+        category = category_element.text.strip() if category_element is not None else None
         record = {
             "product_code": offer.get("id"),
-            "category": category.text.strip() if category is not None else None,
+            "category": category,
             "Producent": attrs.get("Producent"),
             "Kod producenta": attrs.get("Kod producenta"),
             "dysk": attrs.get("Dysk"),
@@ -33,6 +34,7 @@ def parse_xml_to_df(xml_root):
             "Typ matrycy": attrs.get("Typ matrycy"),
         }
         data.append(record)
+    st.write("Przetworzone dane XML:", data)
     return pd.DataFrame(data)
 
 # Przetwórz dane z XML i Excel
