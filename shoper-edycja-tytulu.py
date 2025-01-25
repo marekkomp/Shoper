@@ -20,7 +20,7 @@ def parse_xml_to_df(xml_root):
         attrs = {a.get("name"): a.text.strip() for a in offer.findall("attrs/a")}
         record = {
             "product_code": offer.get("id"),
-            "category": offer.findtext("cat").strip() if offer.findtext("cat") else None,
+            "category": offer.findtext("cat").strip() if offer.findtext("cat") else None,  # Pobranie kategorii
             "Producent": attrs.get("Producent"),
             "Kod producenta": attrs.get("Kod producenta"),
             "dysk": attrs.get("Dysk"),
@@ -49,9 +49,16 @@ def process_data(xml_df, excel_df):
     # Generowanie kolumny name
     def generate_name(row):
         columns = [
-            "category", "Producent", "Kod producenta", "Procesor", 
-            "pamięć ram", "dysk", "typ dysku", 
-            "Rozdzielczość ekranu", "Przekątna ekranu", "Typ matrycy"
+            "category",  # Kategoria jako pierwszy element
+            "Producent", 
+            "Kod producenta", 
+            "Procesor", 
+            "pamięć ram", 
+            "dysk", 
+            "typ dysku", 
+            "Rozdzielczość ekranu", 
+            "Przekątna ekranu", 
+            "Typ matrycy"
         ]
         components = [str(row[col]).strip() for col in columns if col in row.index and pd.notnull(row[col])]
         return " ".join(components).replace("\n", " ").replace("\r", " ")
