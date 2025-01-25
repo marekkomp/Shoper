@@ -2,9 +2,22 @@ import streamlit as st
 import pandas as pd
 from io import BytesIO
 
-# Funkcja do modyfikacji kolumny name
-def update_name_column(df):
+# Funkcja do modyfikacji kolumny name i zamiany kategorii
+def update_name_and_category(df):
     if 'name' in df.columns and 'category' in df.columns:
+        # Mapowanie kategorii do zamiany
+        category_replacements = {
+            'Laptopy': 'Laptop',
+            'Monitory': 'Monitor',
+            'Komputery': 'Komputer',
+            'Telefony': 'Telefon',
+            'Tablety': 'Tablet'
+        }
+
+        # Zamiana wartości w kolumnie category
+        df['category'] = df['category'].replace(category_replacements)
+
+        # Aktualizacja kolumny name
         df['name'] = df['category'] + ' ' + df['name']
     else:
         st.error("Kolumny 'name' lub 'category' nie znaleziono w pliku.")
@@ -23,14 +36,14 @@ if uploaded_file:
 
         # Wyświetlenie oryginalnych danych
         st.subheader("Oryginalne dane")
-        st.write(df.head())
+        st.write(df)
 
         # Modyfikacja danych
-        updated_df = update_name_column(df)
+        updated_df = update_name_and_category(df)
 
         # Wyświetlenie zmodyfikowanych danych
         st.subheader("Zmodyfikowane dane")
-        st.write(updated_df.head())
+        st.write(updated_df)
 
         # Pobranie zmodyfikowanego pliku
         output = BytesIO()
