@@ -134,10 +134,10 @@ else:
         "Informacje dodatkowe", "W zestawie"
     ]
     
-    # Lista kolumn dla widoku "Komputery" – według przekazanej kolejności
+    # Lista kolumn dla widoku "Komputery" – kolejność według specyfikacji
     computers_columns = [
         "id", "price", "stock", "name", "category",
-        "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
+        "Kondycja", "Producent", "Kod Produktu", "Seria procesora", "Stan ekranu",
         "Obudowa", "Stan obudowy", "Gwarancja", "Procesor", "Taktowanie", "Ilość rdzeni",
         "Gniazdo procesora", "Ilość pamięci RAM", "Typ pamięci RAM", "Dysk", "Typ dysku",
         "Licencja", "Typ licencji", "Zainstalowany system", "Ekran dotykowy",
@@ -148,7 +148,7 @@ else:
         "Karta Sieciowa", "Komunikacja", "Informacje dodatkowe", "W zestawie:"
     ]
     
-    # Wybór widoku kolumn – teraz dostępne są cztery opcje: "monitory", "części komputerowe", "części laptopowe" oraz "komputery" lub "wszystkie"
+    # Wybór widoku kolumn – dostępne opcje: "monitory", "części komputerowe", "części laptopowe", "komputery" oraz "wszystkie"
     preset = st.selectbox("Wybierz widok kolumn", options=["monitory", "części komputerowe", "części laptopowe", "komputery", "wszystkie"], index=0)
     
     if preset == "monitory":
@@ -179,6 +179,21 @@ else:
         # Filtrowanie – zakładamy, że w kolumnie "category" dla komputerów występuje wartość "Komputery"
         filtered_data = filtered_data[filtered_data["category"] == "Komputery"]
         selected_columns = [col for col in computers_columns if col in filtered_data.columns]
+        
+        # Modyfikacja kolumny "name" dla widoku "Komputery"
+        def build_computer_name(row):
+            # Startujemy od stałego słowa "Komputer"
+            parts = ["Komputer"]
+            # Lista kolumn w ustalonej kolejności
+            for col in ["Producent", "Kod Produktu", "Ilość pamięci RAM", "Dysk", "Procesor", "Obudowa", "Przekątna ekranu", "Rozdzielczość ekranu"]:
+                val = row.get(col, "")
+                if val:
+                    val = str(val).strip()
+                    if val and val not in ("<nie dotyczy>", "<brak danych>"):
+                        parts.append(val)
+            return " ".join(parts)
+        
+        filtered_data["name"] = filtered_data.apply(build_computer_name, axis=1)
     
     else:
         available_columns = list(filtered_data.columns)
@@ -194,7 +209,7 @@ else:
             new_parts = []
             for col in ["Napięcie", "Typ", "Moc"]:
                 val = str(row.get(col, "")).strip()
-                if val and val != "<nie dotyczy>":
+                if val and val not in ("<nie dotyczy>", "<brak danych>"):
                     new_parts.append(val)
             if new_parts:
                 return f"{row['name']} {' '.join(new_parts)}"
