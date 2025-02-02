@@ -62,7 +62,6 @@ df.to_sql("produkty", conn, if_exists="replace", index=False)
 conn.close()
 
 # Streamlit – interaktywna aplikacja
-
 # Połączenie z bazą SQLite
 conn = sqlite3.connect("produkty.db")
 
@@ -138,7 +137,7 @@ else:
     # Lista kolumn dla widoku "Komputery" – kolejność według specyfikacji
     computers_columns = [
         "id", "price", "stock", "name", "category",
-        "Kondycja", "Producent", "Kod Producenta", "Seria procesora", "Stan ekranu",
+        "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
         "Obudowa", "Stan obudowy", "Gwarancja", "Procesor", "Taktowanie", "Ilość rdzeni",
         "Gniazdo procesora", "Ilość pamięci RAM", "Typ pamięci RAM", "Dysk", "Typ dysku",
         "Licencja", "Typ licencji", "Zainstalowany system", "Ekran dotykowy",
@@ -185,19 +184,18 @@ else:
         
         # Modyfikacja kolumny "name" dla widoku "Komputery"
         def build_computer_name(row):
-            # Startujemy od stałego słowa "Komputer"
             parts = ["Komputer"]
-            # Lista kolumn w ustalonej kolejności
-            for col in ["Producent", "Kod Producenta", "Ilość pamięci RAM", "Dysk", "Procesor", "Obudowa", "Przekątna ekranu", "Rozdzielczość ekranu"]:
+            # Używamy "Kod producenta" zamiast "Kod Produktu"
+            for col in ["Producent", "Kod producenta", "Ilość pamięci RAM", "Dysk", "Procesor", "Obudowa", "Przekątna ekranu", "Rozdzielczość ekranu"]:
                 val = row.get(col, "")
                 if val:
                     val = str(val).strip()
                     if val and val not in ("<nie dotyczy>", "<brak danych>"):
+                        # Jeśli kolumna to "Procesor", skracamy wartość do pierwszych 9 znaków
                         if col == "Procesor":
-                            # Skracamy do pierwszych 9 znaków
                             val = val[:9]
                         parts.append(val)
-            # Usuwamy tokeny zawierające "brak" (np. "brak", "Brak")
+            # Usuwamy tokeny zawierające "brak"
             parts = [token for token in parts if "brak" not in token.lower()]
             return " ".join(parts)
         
