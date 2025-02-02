@@ -134,16 +134,26 @@ else:
         "Informacje dodatkowe", "W zestawie"
     ]
     
-    # Wybór widoku kolumn – teraz dostępne są trzy opcje: "monitory", "części komputerowe" oraz "części laptopowe"
-    preset = st.selectbox("Wybierz widok kolumn", options=["monitory", "części komputerowe", "części laptopowe", "wszystkie"], index=0)
+    # Lista kolumn dla widoku "Komputery" – według przekazanej kolejności
+    computers_columns = [
+        "id", "price", "stock", "name", "category",
+        "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
+        "Obudowa", "Stan obudowy", "Gwarancja", "Procesor", "Taktowanie", "Ilość rdzeni",
+        "Gniazdo procesora", "Ilość pamięci RAM", "Typ pamięci RAM", "Dysk", "Typ dysku",
+        "Licencja", "Typ licencji", "Zainstalowany system", "Ekran dotykowy",
+        "Rozdzielczość ekranu", "Przekątna ekranu", "Powłoka matrycy", "Podświetlenie",
+        "Jasność", "Pivot", "Regulacja wysokości", "Regulacja kąta nachylenia",
+        "Wbudowany głośnik", "Rodzaj karty graficznej", "Model karty graficznej",
+        "Złącza wewnętrzne", "Złącza z tyłu", "Złącza z boku", "Napęd", "Kamera",
+        "Karta Sieciowa", "Komunikacja", "Informacje dodatkowe", "W zestawie:"
+    ]
+    
+    # Wybór widoku kolumn – teraz dostępne są cztery opcje: "monitory", "części komputerowe", "części laptopowe" oraz "komputery" lub "wszystkie"
+    preset = st.selectbox("Wybierz widok kolumn", options=["monitory", "części komputerowe", "części laptopowe", "komputery", "wszystkie"], index=0)
     
     if preset == "monitory":
-        # Filtrowanie – wyświetlamy tylko produkty, których kategoria to "Monitory"
         filtered_data = filtered_data[filtered_data["category"] == "Monitory"]
-        # Ustawienie kolumn w żądanej kolejności (tylko te, które występują w danych)
         selected_columns = [col for col in monitor_columns if col in filtered_data.columns]
-        
-        # Modyfikacja kolumny 'name' – budowanie nowej nazwy na podstawie wybranych atrybutów
         def build_monitor_name(row):
             cols = ["Producent", "Kod producenta", "Przekątna ekranu", "Typ matrycy", "Rozdzielczość ekranu"]
             parts = []
@@ -155,23 +165,22 @@ else:
                 return "Monitor " + " ".join(parts)
             else:
                 return row["name"]
-
         filtered_data["name"] = filtered_data.apply(build_monitor_name, axis=1)
     
     elif preset == "części komputerowe":
-        # Filtrowanie – wyświetlamy tylko produkty, których kategoria to "Części komputerowe"
         filtered_data = filtered_data[filtered_data["category"] == "Części komputerowe"]
-        # Ustawienie kolumn zgodnie z listą dla części komputerowych
         selected_columns = [col for col in computer_parts_columns if col in filtered_data.columns]
     
     elif preset == "części laptopowe":
-        # Filtrowanie – wyświetlamy tylko produkty, których kategoria to "Części laptopowe"
         filtered_data = filtered_data[filtered_data["category"] == "Części laptopowe"]
-        # Ustawienie kolumn zgodnie z listą dla części laptopowych
         selected_columns = [col for col in laptop_parts_columns if col in filtered_data.columns]
     
+    elif preset == "komputery":
+        # Filtrowanie – zakładamy, że w kolumnie "category" dla komputerów występuje wartość "Komputery"
+        filtered_data = filtered_data[filtered_data["category"] == "Komputery"]
+        selected_columns = [col for col in computers_columns if col in filtered_data.columns]
+    
     else:
-        # Użytkownik wybiera dowolne kolumny
         available_columns = list(filtered_data.columns)
         selected_columns = st.multiselect(
             "Wybierz kolumny do wyświetlenia i pobrania", 
@@ -179,10 +188,23 @@ else:
             default=available_columns
         )
     
+    # Opcjonalna modyfikacja nazwy – jeżeli użytkownik wpisze dokładnie "zasilacz"
+    if product_name.lower() == "zasilacz":
+        def build_zasilacz_name(row):
+            new_parts = []
+            for col in ["Napięcie", "Typ", "Moc"]:
+                val = str(row.get(col, "")).strip()
+                if val and val != "<nie dotyczy>":
+                    new_parts.append(val)
+            if new_parts:
+                return f"{row['name']} {' '.join(new_parts)}"
+            else:
+                return row["name"]
+        filtered_data["name"] = filtered_data.apply(build_zasilacz_name, axis=1)
+    
     if not selected_columns:
         st.error("Wybierz przynajmniej jedną kolumnę.")
     else:
-        # Aktualizacja danych do wyświetlenia na podstawie wybranych kolumn
         filtered_data = filtered_data[selected_columns]
         
         st.write(f"Liczba pozycji: {len(filtered_data)}")
@@ -199,3 +221,5 @@ else:
             file_name="produkty.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
+        
+conn.close()
