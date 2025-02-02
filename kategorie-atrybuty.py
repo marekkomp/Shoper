@@ -134,12 +134,12 @@ else:
         "Informacje dodatkowe", "W zestawie"
     ]
     
-    # Lista kolumn dla widoku "Komputery" – kolejność według specyfikacji
+    # Lista kolumn dla widoku "Komputery" – kolejność według specyfikacji z dodanym "Dodatkowy dysk"
     computers_columns = [
         "id", "price", "stock", "name", "category",
         "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
         "Obudowa", "Stan obudowy", "Gwarancja", "Procesor", "Taktowanie", "Ilość rdzeni",
-        "Gniazdo procesora", "Ilość pamięci RAM", "Typ pamięci RAM", "Dysk", "Typ dysku",
+        "Gniazdo procesora", "Ilość pamięci RAM", "Typ pamięci RAM", "Dysk", "Dodatkowy dysk", "Typ dysku",
         "Licencja", "Typ licencji", "Zainstalowany system", "Ekran dotykowy",
         "Rozdzielczość ekranu", "Przekątna ekranu", "Powłoka matrycy", "Podświetlenie",
         "Jasność", "Pivot", "Regulacja wysokości", "Regulacja kąta nachylenia",
@@ -185,15 +185,14 @@ else:
         # Modyfikacja kolumny "name" dla widoku "Komputery"
         def build_computer_name(row):
             parts = ["Komputer"]
-            # Używamy "Kod producenta" zamiast "Kod Produktu"
-            for col in ["Producent", "Kod producenta", "Ilość pamięci RAM", "Dysk", "Procesor", "Obudowa", "Przekątna ekranu", "Rozdzielczość ekranu"]:
+            # Lista kolumn do dołączenia w zadanej kolejności:
+            for col in ["Producent", "Kod producenta", "Ilość pamięci RAM", "Dysk", "Dodatkowy dysk", "Procesor", "Obudowa", "Przekątna ekranu", "Rozdzielczość ekranu"]:
                 val = row.get(col, "")
                 if val:
                     val = str(val).strip()
                     if val and val not in ("<nie dotyczy>", "<brak danych>"):
-                        # Jeśli kolumna to "Procesor", skracamy wartość do pierwszych 9 znaków
                         if col == "Procesor":
-                            val = val[:9]
+                            val = val[:9]  # Skracamy do 9 znaków
                         parts.append(val)
             # Usuwamy tokeny zawierające "brak"
             parts = [token for token in parts if "brak" not in token.lower()]
