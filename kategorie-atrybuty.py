@@ -138,7 +138,7 @@ else:
     # Lista kolumn dla widoku "Komputery" – kolejność według specyfikacji
     computers_columns = [
         "id", "price", "stock", "name", "category",
-        "Kondycja", "Producent", "Kod Produktu", "Seria procesora", "Stan ekranu",
+        "Kondycja", "Producent", "Kod Producenta", "Seria procesora", "Stan ekranu",
         "Obudowa", "Stan obudowy", "Gwarancja", "Procesor", "Taktowanie", "Ilość rdzeni",
         "Gniazdo procesora", "Ilość pamięci RAM", "Typ pamięci RAM", "Dysk", "Typ dysku",
         "Licencja", "Typ licencji", "Zainstalowany system", "Ekran dotykowy",
@@ -188,7 +188,7 @@ else:
             # Startujemy od stałego słowa "Komputer"
             parts = ["Komputer"]
             # Lista kolumn w ustalonej kolejności
-            for col in ["Producent", "Kod Produktu", "Ilość pamięci RAM", "Dysk", "Procesor", "Obudowa", "Przekątna ekranu", "Rozdzielczość ekranu"]:
+            for col in ["Producent", "Kod Producenta", "Ilość pamięci RAM", "Dysk", "Procesor", "Obudowa", "Przekątna ekranu", "Rozdzielczość ekranu"]:
                 val = row.get(col, "")
                 if val:
                     val = str(val).strip()
