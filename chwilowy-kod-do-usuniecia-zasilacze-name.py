@@ -19,17 +19,20 @@ else:
 # Wczytanie XML do struktury drzewa
 root = ET.fromstring(xml_data)
 
-# Zbiór wszystkich możliwych atrybutów (używanych później przy budowaniu DataFrame)
+# Zestaw wszystkich możliwych atrybutów
 all_attributes = set()
+
+# Pierwsza iteracja – zbieranie nazw atrybutów
 for item in root.findall('o'):
     attrs = {attr.get("name") for attr in item.find("attrs").findall("a")}
     all_attributes.update(attrs)
+
+# Konwersja do listy dla późniejszego użycia w DataFrame
 all_attributes = sorted(list(all_attributes))
 
 # Ekstrakcja danych z XML
 data = []
 for item in root.findall('o'):
-    # Pobranie atrybutów jako słownik: nazwa atrybutu -> tekst
     attrs = {attr.get("name"): attr.text for attr in item.find("attrs").findall("a")}
     
     record = {
@@ -41,65 +44,77 @@ for item in root.findall('o'):
         "category": item.find("cat").text.strip(),
     }
     
-    # Dla każdego atrybutu – jeśli dany atrybut występuje, pobieramy jego wartość (ze strippingiem),
-    # w przeciwnym wypadku ustawiamy "<nie dotyczy>"
+    # Dodanie wszystkich atrybutów – zamiast "Brak danych" używamy "<nie dotyczy>"
     for attr in all_attributes:
-        value = attrs.get(attr)
-        record[attr] = value.strip() if value else "<nie dotyczy>"
+        # Jeżeli dla danego atrybutu wartość istnieje, to wywołujemy metodę strip(), w przeciwnym razie przypisujemy "<nie dotyczy>"
+        record[attr] = attrs.get(attr, "<nie dotyczy>").strip() if attrs.get(attr) else "<nie dotyczy>"
     
     data.append(record)
 
-# Konwersja do DataFrame i uzupełnienie ewentualnych braków
+# Konwersja danych do DataFrame
 df = pd.DataFrame(data)
+
+# Uzupełnianie brakujących danych w całym DataFrame
 df.fillna("<nie dotyczy>", inplace=True)
 
-# Zapis danych do bazy SQLite
+# Zapisanie danych do SQLite
 conn = sqlite3.connect("produkty.db")
 df.to_sql("produkty", conn, if_exists="replace", index=False)
 conn.close()
 
-# Streamlit – aplikacja interaktywna
+# Streamlit – interaktywna aplikacja
+
+# Połączenie z bazą SQLite
 conn = sqlite3.connect("produkty.db")
+
+# Wczytanie danych z bazy
 df = pd.read_sql_query("SELECT * FROM produkty", conn)
 
+# Tytuł aplikacji
 st.title("Stan magazynowy kompre.pl (BETA)")
 
-# Wyszukiwanie po nazwie produktu
+# Pole do wyszukiwania nazwy produktu
 product_name = st.text_input("Wpisz fragment nazwy produktu:")
 
+# Dynamiczne budowanie filtrów
 st.header("Filtry")
 
-# Filtracja po cenie
+# Cena
 min_price = st.slider("Minimalna cena", int(df['price'].min()), int(df['price'].max()), int(df['price'].min()))
 max_price = st.slider("Maksymalna cena", int(df['price'].min()), int(df['price'].max()), int(df['price'].max()))
 
-# Filtracja po kategorii
+# Kategoria
 category = st.selectbox("Kategoria", options=["Wszystkie"] + df['category'].dropna().unique().tolist())
 
-# Dynamiczne filtry dla pozostałych atrybutów
+# Pozostałe atrybuty
 filters = {}
 for attr in all_attributes:
     unique_values = df[attr].dropna().unique().tolist()
     if unique_values:
         filters[attr] = st.selectbox(f"{attr}", options=["Wszystkie"] + unique_values)
 
-# Budowanie zapytania SQL na podstawie ustawionych filtrów
+# Budowanie zapytania SQL na podstawie aktywnych filtrów
 query = f"SELECT * FROM produkty WHERE price BETWEEN {min_price} AND {max_price}"
+
 if category != "Wszystkie":
     query += f" AND category = '{category}'"
+
 for attr, value in filters.items():
     if value != "Wszystkie":
         query += f" AND `{attr}` = '{value}'"
+
 if product_name:
     query += f" AND name LIKE '%{product_name}%'"
 
+# Pobranie danych po zastosowaniu filtrów
 filtered_data = pd.read_sql_query(query, conn)
 
+# Wyświetlanie wyników filtrowania
 st.header("Wyniki filtrowania")
 if filtered_data.empty:
     st.warning("Brak wyników dla wybranych filtrów. Spróbuj zmienić ustawienia filtrów.")
 else:
-    # Definicje list kolumn dla różnych widoków
+    # Lista kolumn dla widoku "monitory" w żądanej kolejności
     monitor_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Producent", "Kod producenta",
         "Stan ekranu", "Stan obudowy", "Ekran dotykowy", "Rozdzielczość ekranu", "Przekątna ekranu",
@@ -107,23 +122,30 @@ else:
         "Stopa w komplecie", "Regulacja kąta nachylenia", "Regulacja wysokości", "Pivot",
         "Złącza zewnętrzne", "Kolor", "Wbudowany głośnik", "Informacje dodatkowe", "W zestawie", "Gwarancja"
     ]
+    
+    # Lista kolumn dla widoku "części komputerowe"
     computer_parts_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Kod producenta",
         "Rodzaj", "Przeznaczenie", "Typ", "Napięcie", "Pojemność", "Gwarancja"
     ]
+    
+    # Lista kolumn dla widoku "części laptopowe"
     laptop_parts_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Kod producenta",
         "Rodzaj", "Przeznaczenie", "Napięcie", "Pojemność", "Gwarancja", "Typ", "Moc",
         "Informacje dodatkowe", "W zestawie"
     ]
     
-    # Wybór widoku kolumn
-    preset = st.selectbox("Wybierz widok kolumn", 
-                           options=["monitory", "części komputerowe", "części laptopowe", "zasilacze", "wszystkie"],
-                           index=0)
+    # Wybór widoku kolumn – teraz dostępne są cztery opcje: "monitory", "części komputerowe", "części laptopowe" oraz "wszystkie"
+    preset = st.selectbox("Wybierz widok kolumn", options=["monitory", "części komputerowe", "części laptopowe", "wszystkie"], index=0)
     
     if preset == "monitory":
+        # Filtrowanie – wyświetlamy tylko produkty, których kategoria to "Monitory"
         filtered_data = filtered_data[filtered_data["category"] == "Monitory"]
+        # Ustawienie kolumn w żądanej kolejności (tylko te, które występują w danych)
+        selected_columns = [col for col in monitor_columns if col in filtered_data.columns]
+        
+        # Modyfikacja kolumny 'name' – budowanie nowej nazwy na podstawie wybranych atrybutów
         def build_monitor_name(row):
             cols = ["Producent", "Kod producenta", "Przekątna ekranu", "Typ matrycy", "Rozdzielczość ekranu"]
             parts = []
@@ -135,64 +157,63 @@ else:
                 return "Monitor " + " ".join(parts)
             else:
                 return row["name"]
+
         filtered_data["name"] = filtered_data.apply(build_monitor_name, axis=1)
-        selected_columns = [col for col in monitor_columns if col in filtered_data.columns]
     
     elif preset == "części komputerowe":
+        # Filtrowanie – wyświetlamy tylko produkty, których kategoria to "Części komputerowe"
         filtered_data = filtered_data[filtered_data["category"] == "Części komputerowe"]
+        # Ustawienie kolumn zgodnie z listą dla części komputerowych
         selected_columns = [col for col in computer_parts_columns if col in filtered_data.columns]
     
     elif preset == "części laptopowe":
+        # Filtrowanie – wyświetlamy tylko produkty, których kategoria to "Części laptopowe"
         filtered_data = filtered_data[filtered_data["category"] == "Części laptopowe"]
+        # Ustawienie kolumn zgodnie z listą dla części laptopowych
         selected_columns = [col for col in laptop_parts_columns if col in filtered_data.columns]
     
-    elif preset == "zasilacze":
-        # Filtrowanie – wybieramy tylko produkty, których kategoria to "Zasilacze"
-        filtered_data = filtered_data[filtered_data["category"] == "Zasilacze"]
-        # Pobranie ręcznych danych od użytkownika
-        manual_napiecie = st.text_input("Podaj napięcie zasilacza:", key="napiecie")
-        manual_typ = st.text_input("Podaj typ zasilacza:", key="typ")
-        manual_moc = st.text_input("Podaj moc zasilacza:", key="moc")
-        # Funkcja modyfikująca nazwę produktu poprzez dołączenie wpisanych danych
+    else:
+        # Użytkownik wybiera dowolne kolumny
+        available_columns = list(filtered_data.columns)
+        selected_columns = st.multiselect(
+            "Wybierz kolumny do wyświetlenia i pobrania", 
+            options=available_columns, 
+            default=available_columns
+        )
+    
+    # Jeśli wpisany fragment nazwy to dokładnie "zasilacz", rozszerzamy kolumnę "name"
+    if product_name.lower() == "zasilacz":
         def build_zasilacz_name(row):
-            details = []
-            if manual_napiecie:
-                details.append("Napięcie: " + manual_napiecie)
-            if manual_typ:
-                details.append("Typ: " + manual_typ)
-            if manual_moc:
-                details.append("Moc: " + manual_moc)
-            if details:
-                return row["name"] + " (" + ", ".join(details) + ")"
+            new_parts = []
+            for col in ["Napięcie", "Typ", "Moc"]:
+                val = str(row.get(col, "")).strip()
+                if val and val != "<nie dotyczy>":
+                    new_parts.append(val)
+            if new_parts:
+                return f"{row['name']} {' '.join(new_parts)}"
             else:
                 return row["name"]
         filtered_data["name"] = filtered_data.apply(build_zasilacz_name, axis=1)
-        # Wybieramy kolumny – tutaj pokazujemy podstawowe kolumny
-        selected_columns = ["id", "price", "stock", "name", "category"]
-    
-    else:  # opcja "wszystkie"
-        available_columns = list(filtered_data.columns)
-        selected_columns = st.multiselect("Wybierz kolumny do wyświetlenia i pobrania", 
-                                          options=available_columns, 
-                                          default=available_columns)
     
     if not selected_columns:
         st.error("Wybierz przynajmniej jedną kolumnę.")
     else:
+        # Aktualizacja danych do wyświetlenia na podstawie wybranych kolumn
         filtered_data = filtered_data[selected_columns]
+        
         st.write(f"Liczba pozycji: {len(filtered_data)}")
         st.dataframe(filtered_data, use_container_width=True)
-        
-        # Przygotowanie pliku Excel do pobrania
+    
+        # Przygotowanie pliku Excel
         excel_buffer = io.BytesIO()
         filtered_data.to_excel(excel_buffer, index=False, engine="openpyxl")
         excel_buffer.seek(0)
-        
+    
         st.download_button(
             label="Pobierz dane jako Excel",
             data=excel_buffer,
             file_name="produkty.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         )
-
+        
 conn.close()
