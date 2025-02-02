@@ -62,6 +62,7 @@ df.to_sql("produkty", conn, if_exists="replace", index=False)
 conn.close()
 
 # Streamlit – interaktywna aplikacja
+
 # Połączenie z bazą SQLite
 conn = sqlite3.connect("produkty.db")
 
@@ -149,7 +150,9 @@ else:
     ]
     
     # Wybór widoku kolumn – dostępne opcje: "monitory", "części komputerowe", "części laptopowe", "komputery" oraz "wszystkie"
-    preset = st.selectbox("Wybierz widok kolumn", options=["monitory", "części komputerowe", "części laptopowe", "komputery", "wszystkie"], index=0)
+    preset = st.selectbox("Wybierz widok kolumn", 
+                           options=["monitory", "części komputerowe", "części laptopowe", "komputery", "wszystkie"], 
+                           index=0)
     
     if preset == "monitory":
         filtered_data = filtered_data[filtered_data["category"] == "Monitory"]
@@ -190,7 +193,12 @@ else:
                 if val:
                     val = str(val).strip()
                     if val and val not in ("<nie dotyczy>", "<brak danych>"):
+                        if col == "Procesor":
+                            # Skracamy do pierwszych 9 znaków
+                            val = val[:9]
                         parts.append(val)
+            # Usuwamy tokeny zawierające "brak" (np. "brak", "Brak")
+            parts = [token for token in parts if "brak" not in token.lower()]
             return " ".join(parts)
         
         filtered_data["name"] = filtered_data.apply(build_computer_name, axis=1)
