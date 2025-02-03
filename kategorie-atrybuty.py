@@ -134,7 +134,7 @@ else:
         "Informacje dodatkowe", "W zestawie"
     ]
     
-    # Lista kolumn dla widoku "Komputery" – kolejność według specyfikacji z dodanym "Dodatkowy dysk"
+    # Lista kolumn dla widoku "Komputery"
     computers_columns = [
         "id", "price", "stock", "name", "category",
         "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
@@ -148,14 +148,24 @@ else:
         "Karta Sieciowa", "Komunikacja", "Informacje dodatkowe", "W zestawie:"
     ]
     
-    # Wybór widoku kolumn – dostępne opcje: "monitory", "części komputerowe", "części laptopowe", "komputery" oraz "wszystkie"
+    # Lista kolumn dla widoku "Akcesoria"
+    akcesoria_columns = [
+        "id", "price", "stock", "name", "category", "Kondycja", "Stan obudowy", "Kod producenta",
+        "Rodzaj", "Długość (cm)", "Przeznaczenie", "Napięcie", "Pojemność", "Gwarancja", "Typ",
+        "Interfejs", "Układ", "Moc", "Kolor", "Informacje dodatkowe", "W zestawie"
+    ]
+    
+    # Wybór widoku kolumn – dostępne opcje:
+    # "monitory", "części komputerowe", "części laptopowe", "komputery", "akcesoria", oraz "wszystkie"
     preset = st.selectbox("Wybierz widok kolumn", 
-                           options=["monitory", "części komputerowe", "części laptopowe", "komputery", "wszystkie"], 
+                           options=["monitory", "części komputerowe", "części laptopowe", "komputery", "akcesoria", "wszystkie"], 
                            index=0)
     
     if preset == "monitory":
         filtered_data = filtered_data[filtered_data["category"] == "Monitory"]
         selected_columns = [col for col in monitor_columns if col in filtered_data.columns]
+        
+        # Budowanie nowej nazwy dla monitora
         def build_monitor_name(row):
             cols = ["Producent", "Kod producenta", "Przekątna ekranu", "Typ matrycy", "Rozdzielczość ekranu"]
             parts = []
@@ -167,6 +177,7 @@ else:
                 return "Monitor " + " ".join(parts)
             else:
                 return row["name"]
+        
         filtered_data["name"] = filtered_data.apply(build_monitor_name, axis=1)
     
     elif preset == "części komputerowe":
@@ -178,14 +189,12 @@ else:
         selected_columns = [col for col in laptop_parts_columns if col in filtered_data.columns]
     
     elif preset == "komputery":
-        # Filtrowanie – zakładamy, że w kolumnie "category" dla komputerów występuje wartość "Komputery"
         filtered_data = filtered_data[filtered_data["category"] == "Komputery"]
         selected_columns = [col for col in computers_columns if col in filtered_data.columns]
         
-        # Modyfikacja kolumny "name" dla widoku "Komputery"
+        # Modyfikacja nazwy dla widoku "Komputery"
         def build_computer_name(row):
             parts = ["Komputer"]
-            # Lista kolumn do dołączenia w zadanej kolejności:
             for col in ["Producent", "Kod producenta", "Ilość pamięci RAM", "Dysk", "Dodatkowy dysk", "Procesor", "Obudowa", "Przekątna ekranu", "Rozdzielczość ekranu"]:
                 val = row.get(col, "")
                 if val:
@@ -194,11 +203,14 @@ else:
                         if col == "Procesor":
                             val = val[:9]  # Skracamy do 9 znaków
                         parts.append(val)
-            # Usuwamy tokeny zawierające "brak"
             parts = [token for token in parts if "brak" not in token.lower()]
             return " ".join(parts)
         
         filtered_data["name"] = filtered_data.apply(build_computer_name, axis=1)
+    
+    elif preset == "akcesoria":
+        filtered_data = filtered_data[filtered_data["category"] == "Akcesoria"]
+        selected_columns = [col for col in akcesoria_columns if col in filtered_data.columns]
     
     else:
         available_columns = list(filtered_data.columns)
@@ -208,7 +220,7 @@ else:
             default=available_columns
         )
     
-    # Opcjonalna modyfikacja nazwy – jeżeli użytkownik wpisze dokładnie "zasilacz"
+    # Opcjonalna modyfikacja nazwy – dla przykładu, jeżeli użytkownik wpisze dokładnie "zasilacz"
     if product_name.lower() == "zasilacz":
         def build_zasilacz_name(row):
             new_parts = []
@@ -226,15 +238,13 @@ else:
         st.error("Wybierz przynajmniej jedną kolumnę.")
     else:
         filtered_data = filtered_data[selected_columns]
-        
         st.write(f"Liczba pozycji: {len(filtered_data)}")
         st.dataframe(filtered_data, use_container_width=True)
-    
+        
         # Przygotowanie pliku Excel
         excel_buffer = io.BytesIO()
         filtered_data.to_excel(excel_buffer, index=False, engine="openpyxl")
         excel_buffer.seek(0)
-    
         st.download_button(
             label="Pobierz dane jako Excel",
             data=excel_buffer,
