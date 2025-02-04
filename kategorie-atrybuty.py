@@ -229,7 +229,7 @@ else:
                 val = row.get(col, "<nie dotyczy>")
                 if val and val != "<nie dotyczy>":
                     if col == "Procesor":
-                        val = val[:10]  # Skracamy wartość Procesor do 10 znaków
+                        val = val[:9]  # Skracamy wartość Procesor do 9 znaków
                     parts.append(val)
             if parts:
                 return "Laptop " + " ".join(parts)
@@ -245,9 +245,10 @@ else:
             default=available_columns
         )
     
-    # Na samym końcu – do kolumny "name" dodajemy sufiks na podstawie wartości z kolumny "Kondycja"
+    # Na samym końcu – do kolumny "name" dodajemy sufiks na podstawie wartości z kolumny "Kondycja".
+    # Usuwamy cudzysłowy przed porównaniem.
     def append_kondycja_suffix(row):
-        cond = row.get("Kondycja", "").strip()
+        cond = row.get("Kondycja", "").replace('"', '').strip()
         suffix = ""
         if cond == "A- poleasingowy, przetestowany":
             suffix = "[A-]"
