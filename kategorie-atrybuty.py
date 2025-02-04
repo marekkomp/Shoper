@@ -178,12 +178,12 @@ else:
         selected_columns = [col for col in laptopy_columns if col in filtered_data.columns]
         # Budowanie nazwy dla "Laptopy" zgodnie z nowym schematem
         def build_laptop_name(row):
-            # Grupa 1: Producent, Kod producenta, Procesor (skrócony do 9 znaków)
+            # Grupa 1: Producent, Kod producenta, Procesor (skrócony do 10 znaków)
             group1 = []
             for col in ["Producent", "Kod producenta", "Procesor"]:
                 val = row.get(col, "<nie dotyczy>")
                 if val and val != "<nie dotyczy>":
-                    group1.append(val[:9] if col == "Procesor" else val)
+                    group1.append(val[:10] if col == "Procesor" else val)
             # Grupa 2: Ilość pamięci RAM, Dysk, Dodatkowy dysk, Typ dysku
             group2 = [row.get(col, "<nie dotyczy>") for col in ["Ilość pamięci RAM", "Dysk", "Dodatkowy dysk", "Typ dysku"]]
             group2 = [v for v in group2 if v and v != "<nie dotyczy>"]
