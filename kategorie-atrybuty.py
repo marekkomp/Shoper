@@ -21,20 +21,15 @@ root = ET.fromstring(xml_data)
 
 # Zestaw wszystkich możliwych atrybutów
 all_attributes = set()
-
-# Pierwsza iteracja – zbieranie nazw atrybutów
 for item in root.findall('o'):
     attrs = {attr.get("name") for attr in item.find("attrs").findall("a")}
     all_attributes.update(attrs)
-
-# Konwersja do listy dla późniejszego użycia w DataFrame
 all_attributes = sorted(list(all_attributes))
 
 # Ekstrakcja danych z XML
 data = []
 for item in root.findall('o'):
     attrs = {attr.get("name"): attr.text for attr in item.find("attrs").findall("a")}
-    
     record = {
         "id": item.get("id"),
         "url": item.get("url"),
@@ -43,71 +38,48 @@ for item in root.findall('o'):
         "name": item.find("name").text.strip(),
         "category": item.find("cat").text.strip(),
     }
-    
-    # Dodanie wszystkich atrybutów – zamiast "Brak danych" używamy "<nie dotyczy>"
     for attr in all_attributes:
         record[attr] = attrs.get(attr, "<nie dotyczy>").strip() if attrs.get(attr) else "<nie dotyczy>"
-    
     data.append(record)
 
 # Konwersja danych do DataFrame
 df = pd.DataFrame(data)
-
-# Uzupełnianie brakujących danych w całym DataFrame
 df.fillna("<nie dotyczy>", inplace=True)
 
-# Zapisanie danych do SQLite
+# Zapis danych do SQLite
 conn = sqlite3.connect("produkty.db")
 df.to_sql("produkty", conn, if_exists="replace", index=False)
 conn.close()
 
 # Streamlit – interaktywna aplikacja
-# Połączenie z bazą SQLite
 conn = sqlite3.connect("produkty.db")
-
-# Wczytanie danych z bazy
 df = pd.read_sql_query("SELECT * FROM produkty", conn)
 
-# Tytuł aplikacji
 st.title("Stan magazynowy kompre.pl (BETA)")
-
-# Pole do wyszukiwania nazwy produktu
 product_name = st.text_input("Wpisz fragment nazwy produktu:")
 
-# Dynamiczne budowanie filtrów
 st.header("Filtry")
-
-# Cena
 min_price = st.slider("Minimalna cena", int(df['price'].min()), int(df['price'].max()), int(df['price'].min()))
 max_price = st.slider("Maksymalna cena", int(df['price'].min()), int(df['price'].max()), int(df['price'].max()))
-
-# Kategoria
 category = st.selectbox("Kategoria", options=["Wszystkie"] + df['category'].dropna().unique().tolist())
 
-# Pozostałe atrybuty
 filters = {}
 for attr in all_attributes:
     unique_values = df[attr].dropna().unique().tolist()
     if unique_values:
         filters[attr] = st.selectbox(f"{attr}", options=["Wszystkie"] + unique_values)
 
-# Budowanie zapytania SQL na podstawie aktywnych filtrów
 query = f"SELECT * FROM produkty WHERE price BETWEEN {min_price} AND {max_price}"
-
 if category != "Wszystkie":
     query += f" AND category = '{category}'"
-
 for attr, value in filters.items():
     if value != "Wszystkie":
         query += f" AND `{attr}` = '{value}'"
-
 if product_name:
     query += f" AND name LIKE '%{product_name}%'"
 
-# Pobranie danych po zastosowaniu filtrów
 filtered_data = pd.read_sql_query(query, conn)
 
-# Wyświetlanie wyników filtrowania
 st.header("Wyniki filtrowania")
 if filtered_data.empty:
     st.warning("Brak wyników dla wybranych filtrów. Spróbuj zmienić ustawienia filtrów.")
@@ -120,18 +92,15 @@ else:
         "Stopa w komplecie", "Regulacja kąta nachylenia", "Regulacja wysokości", "Pivot",
         "Złącza zewnętrzne", "Kolor", "Wbudowany głośnik", "Informacje dodatkowe", "W zestawie", "Gwarancja"
     ]
-    
     computer_parts_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Kod producenta",
         "Rodzaj", "Przeznaczenie", "Typ", "Napięcie", "Pojemność", "Gwarancja"
     ]
-    
     laptop_parts_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Kod producenta",
         "Rodzaj", "Przeznaczenie", "Napięcie", "Pojemność", "Gwarancja", "Typ", "Moc",
         "Informacje dodatkowe", "W zestawie"
     ]
-    
     computers_columns = [
         "id", "price", "stock", "name", "category",
         "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
@@ -144,13 +113,11 @@ else:
         "Złącza wewnętrzne", "Złącza z tyłu", "Złącza z boku", "Napęd", "Kamera",
         "Karta Sieciowa", "Komunikacja", "Informacje dodatkowe", "W zestawie:"
     ]
-    
     akcesoria_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Stan obudowy", "Kod producenta",
         "Rodzaj", "Długość (cm)", "Przeznaczenie", "Napięcie", "Pojemność", "Gwarancja", "Typ",
         "Interfejs", "Układ", "Moc", "Kolor", "Informacje dodatkowe", "W zestawie"
     ]
-    
     laptopy_columns = [
         "id", "price", "stock", "name", "category",
         "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
@@ -171,19 +138,10 @@ else:
     if preset == "monitory":
         filtered_data = filtered_data[filtered_data["category"] == "Monitory"]
         selected_columns = [col for col in monitor_columns if col in filtered_data.columns]
-        
-        # Budowanie nowej nazwy dla monitora
         def build_monitor_name(row):
             cols = ["Producent", "Kod producenta", "Przekątna ekranu", "Typ matrycy", "Rozdzielczość ekranu"]
-            parts = []
-            for col in cols:
-                value = row.get(col, "<nie dotyczy>")
-                if value and value != "<nie dotyczy>":
-                    parts.append(value)
-            if parts:
-                return "Monitor " + " ".join(parts)
-            else:
-                return row["name"]
+            parts = [row.get(col, "<nie dotyczy>") for col in cols if row.get(col, "<nie dotyczy>") != "<nie dotyczy>"]
+            return "Monitor " + " ".join(parts) if parts else row["name"]
         filtered_data["name"] = filtered_data.apply(build_monitor_name, axis=1)
     
     elif preset == "części komputerowe":
@@ -197,8 +155,6 @@ else:
     elif preset == "komputery":
         filtered_data = filtered_data[filtered_data["category"] == "Komputery"]
         selected_columns = [col for col in computers_columns if col in filtered_data.columns]
-        
-        # Modyfikacja nazwy dla widoku "Komputery"
         def build_computer_name(row):
             parts = ["Komputer"]
             for col in ["Producent", "Kod producenta", "Ilość pamięci RAM", "Dysk", "Dodatkowy dysk", "Procesor", "Obudowa", "Przekątna ekranu", "Rozdzielczość ekranu"]:
@@ -207,7 +163,7 @@ else:
                     val = str(val).strip()
                     if val and val not in ("<nie dotyczy>", "<brak danych>"):
                         if col == "Procesor":
-                            val = val[:9]  # Skracamy do 9 znaków
+                            val = val[:9]
                         parts.append(val)
             parts = [token for token in parts if "brak" not in token.lower()]
             return " ".join(parts)
@@ -220,21 +176,33 @@ else:
     elif preset == "laptopy":
         filtered_data = filtered_data[filtered_data["category"] == "Laptopy"]
         selected_columns = [col for col in laptopy_columns if col in filtered_data.columns]
-        
-        # Budowanie nowej nazwy dla laptopa według podanego wzoru
+        # Budowanie nazwy dla "Laptopy" zgodnie z nowym schematem
         def build_laptop_name(row):
-            parts = []
-            for col in ["Producent", "Kod producenta", "Ilość pamięci RAM", "Procesor", "Dysk", 
-                        "Dodatkowy dysk", "Typ dysku", "Przekątna ekranu", "Rozdzielczość ekranu", "Zainstalowany system"]:
+            # Grupa 1: Producent, Kod producenta, Procesor (skrócony do 9 znaków)
+            group1 = []
+            for col in ["Producent", "Kod producenta", "Procesor"]:
                 val = row.get(col, "<nie dotyczy>")
                 if val and val != "<nie dotyczy>":
-                    if col == "Procesor":
-                        val = val[:10]  # Skracamy wartość Procesor do 10 znaków
-                    parts.append(val)
-            if parts:
-                return "Laptop " + " ".join(parts)
-            else:
-                return row["name"]
+                    group1.append(val[:9] if col == "Procesor" else val)
+            # Grupa 2: Ilość pamięci RAM, Dysk, Dodatkowy dysk, Typ dysku
+            group2 = [row.get(col, "<nie dotyczy>") for col in ["Ilość pamięci RAM", "Dysk", "Dodatkowy dysk", "Typ dysku"]]
+            group2 = [v for v in group2 if v and v != "<nie dotyczy>"]
+            # Grupa 3: Przekątna ekranu, Rozdzielczość ekranu
+            group3 = [row.get(col, "<nie dotyczy>") for col in ["Przekątna ekranu", "Rozdzielczość ekranu"]]
+            group3 = [v for v in group3 if v and v != "<nie dotyczy>"]
+            # Grupa 4: Zainstalowany system
+            group4 = [row.get("Zainstalowany system", "<nie dotyczy>")]
+            group4 = [v for v in group4 if v and v != "<nie dotyczy>"]
+            parts = []
+            if group1:
+                parts.append(" ".join(group1))
+            if group2:
+                parts.append(" ".join(group2))
+            if group3:
+                parts.append(" ".join(group3))
+            if group4:
+                parts.append(" ".join(group4))
+            return "Laptop " + " | ".join(parts) if parts else row["name"]
         filtered_data["name"] = filtered_data.apply(build_laptop_name, axis=1)
     
     else:
@@ -245,8 +213,7 @@ else:
             default=available_columns
         )
     
-    # Na samym końcu – do kolumny "name" dodajemy sufiks na podstawie wartości z kolumny "Kondycja".
-    # Usuwamy cudzysłowy przed porównaniem.
+    # Dodanie sufiksu z kolumny "Kondycja" (usuwamy cudzysłowy przed porównaniem)
     def append_kondycja_suffix(row):
         cond = row.get("Kondycja", "").replace('"', '').strip()
         suffix = ""
@@ -269,7 +236,6 @@ else:
         st.write(f"Liczba pozycji: {len(filtered_data)}")
         st.dataframe(filtered_data, use_container_width=True)
         
-        # Przygotowanie pliku Excel
         excel_buffer = io.BytesIO()
         filtered_data.to_excel(excel_buffer, index=False, engine="openpyxl")
         excel_buffer.seek(0)
