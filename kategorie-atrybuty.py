@@ -228,6 +228,23 @@ else:
     elif preset == "laptopy":
         filtered_data = filtered_data[filtered_data["category"] == "Laptopy"]
         selected_columns = [col for col in laptopy_columns if col in filtered_data.columns]
+        
+        # Budowanie nowej nazwy dla laptopa
+        def build_laptop_name(row):
+            parts = []
+            # Lista kolumn do wykorzystania przy budowaniu nazwy
+            for col in ["Producent", "Kod producenta", "Ilość pamięci RAM", "Procesor", "Dysk", "Dodatkowy dysk", "Typ dysku", "Przekątna ekranu", "Rozdzielczość ekranu", "Zainstalowany system"]:
+                val = row.get(col, "<nie dotyczy>")
+                if val and val != "<nie dotyczy>":
+                    if col == "Procesor":
+                        val = val[:9]  # Skracamy wartość Procesor do 9 znaków
+                    parts.append(val)
+            if parts:
+                return "Laptop " + " ".join(parts)
+            else:
+                return row["name"]
+        
+        filtered_data["name"] = filtered_data.apply(build_laptop_name, axis=1)
     
     else:
         available_columns = list(filtered_data.columns)
