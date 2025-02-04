@@ -229,7 +229,7 @@ else:
                 val = row.get(col, "<nie dotyczy>")
                 if val and val != "<nie dotyczy>":
                     if col == "Procesor":
-                        val = val[:9]  # Skracamy wartość Procesor do 9 znaków
+                        val = val[:10]  # Skracamy wartość Procesor do 10 znaków
                     parts.append(val)
             if parts:
                 return "Laptop " + " ".join(parts)
