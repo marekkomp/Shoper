@@ -155,10 +155,23 @@ else:
         "Interfejs", "Układ", "Moc", "Kolor", "Informacje dodatkowe", "W zestawie"
     ]
     
+    # Lista kolumn dla widoku "Laptopy"
+    laptopy_columns = [
+        "id", "price", "stock", "name", "category",
+        "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
+        "Stan obudowy", "Procesor", "Taktowanie", "Ilość rdzeni",
+        "Ilość pamięci RAM", "Typ pamięci RAM", "Dysk", "Dodatkowy dysk", "Typ dysku",
+        "Licencja", "Typ licencji", "Zainstalowany system", "Ekran dotykowy",
+        "Rozdzielczość ekranu", "Przekątna ekranu", "Powłoka matrycy",
+        "Rodzaj karty graficznej", "Model karty graficznej", 
+        "Złącza zewnętrzne", "Napęd", "Kamera",
+        "Komunikacja", "Bateria", "Klawiatura", "Informacje dodatkowe", "W zestawie:", "Gwarancja"
+    ]
+    
     # Wybór widoku kolumn – dostępne opcje:
-    # "monitory", "części komputerowe", "części laptopowe", "komputery", "akcesoria", oraz "wszystkie"
+    # "monitory", "części komputerowe", "części laptopowe", "komputery", "akcesoria", "laptopy" oraz "wszystkie"
     preset = st.selectbox("Wybierz widok kolumn", 
-                           options=["monitory", "części komputerowe", "części laptopowe", "komputery", "akcesoria", "wszystkie"], 
+                           options=["monitory", "części komputerowe", "części laptopowe", "komputery", "akcesoria", "laptopy", "wszystkie"], 
                            index=0)
     
     if preset == "monitory":
@@ -211,6 +224,10 @@ else:
     elif preset == "akcesoria":
         filtered_data = filtered_data[filtered_data["category"] == "Akcesoria"]
         selected_columns = [col for col in akcesoria_columns if col in filtered_data.columns]
+    
+    elif preset == "laptopy":
+        filtered_data = filtered_data[filtered_data["category"] == "Laptopy"]
+        selected_columns = [col for col in laptopy_columns if col in filtered_data.columns]
     
     else:
         available_columns = list(filtered_data.columns)
