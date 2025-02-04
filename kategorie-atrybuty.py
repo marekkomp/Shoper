@@ -112,7 +112,7 @@ st.header("Wyniki filtrowania")
 if filtered_data.empty:
     st.warning("Brak wyników dla wybranych filtrów. Spróbuj zmienić ustawienia filtrów.")
 else:
-    # Lista kolumn dla widoku "monitory" w żądanej kolejności
+    # Listy kolumn dla poszczególnych widoków
     monitor_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Producent", "Kod producenta",
         "Stan ekranu", "Stan obudowy", "Ekran dotykowy", "Rozdzielczość ekranu", "Przekątna ekranu",
@@ -121,20 +121,17 @@ else:
         "Złącza zewnętrzne", "Kolor", "Wbudowany głośnik", "Informacje dodatkowe", "W zestawie", "Gwarancja"
     ]
     
-    # Lista kolumn dla widoku "części komputerowe"
     computer_parts_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Kod producenta",
         "Rodzaj", "Przeznaczenie", "Typ", "Napięcie", "Pojemność", "Gwarancja"
     ]
     
-    # Lista kolumn dla widoku "części laptopowe"
     laptop_parts_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Kod producenta",
         "Rodzaj", "Przeznaczenie", "Napięcie", "Pojemność", "Gwarancja", "Typ", "Moc",
         "Informacje dodatkowe", "W zestawie"
     ]
     
-    # Lista kolumn dla widoku "Komputery"
     computers_columns = [
         "id", "price", "stock", "name", "category",
         "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
@@ -148,14 +145,12 @@ else:
         "Karta Sieciowa", "Komunikacja", "Informacje dodatkowe", "W zestawie:"
     ]
     
-    # Lista kolumn dla widoku "Akcesoria"
     akcesoria_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Stan obudowy", "Kod producenta",
         "Rodzaj", "Długość (cm)", "Przeznaczenie", "Napięcie", "Pojemność", "Gwarancja", "Typ",
         "Interfejs", "Układ", "Moc", "Kolor", "Informacje dodatkowe", "W zestawie"
     ]
     
-    # Lista kolumn dla widoku "Laptopy"
     laptopy_columns = [
         "id", "price", "stock", "name", "category",
         "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
@@ -168,8 +163,7 @@ else:
         "Komunikacja", "Bateria", "Klawiatura", "Informacje dodatkowe", "W zestawie:", "Gwarancja"
     ]
     
-    # Wybór widoku kolumn – dostępne opcje:
-    # "monitory", "części komputerowe", "części laptopowe", "komputery", "akcesoria", "laptopy" oraz "wszystkie"
+    # Wybór widoku kolumn
     preset = st.selectbox("Wybierz widok kolumn", 
                            options=["monitory", "części komputerowe", "części laptopowe", "komputery", "akcesoria", "laptopy", "wszystkie"], 
                            index=0)
@@ -190,7 +184,6 @@ else:
                 return "Monitor " + " ".join(parts)
             else:
                 return row["name"]
-        
         filtered_data["name"] = filtered_data.apply(build_monitor_name, axis=1)
     
     elif preset == "części komputerowe":
@@ -218,7 +211,6 @@ else:
                         parts.append(val)
             parts = [token for token in parts if "brak" not in token.lower()]
             return " ".join(parts)
-        
         filtered_data["name"] = filtered_data.apply(build_computer_name, axis=1)
     
     elif preset == "akcesoria":
@@ -229,11 +221,11 @@ else:
         filtered_data = filtered_data[filtered_data["category"] == "Laptopy"]
         selected_columns = [col for col in laptopy_columns if col in filtered_data.columns]
         
-        # Budowanie nowej nazwy dla laptopa
+        # Budowanie nowej nazwy dla laptopa według podanego wzoru
         def build_laptop_name(row):
             parts = []
-            # Lista kolumn do wykorzystania przy budowaniu nazwy
-            for col in ["Producent", "Kod producenta", "Ilość pamięci RAM", "Procesor", "Dysk", "Dodatkowy dysk", "Typ dysku", "Przekątna ekranu", "Rozdzielczość ekranu", "Zainstalowany system"]:
+            for col in ["Producent", "Kod producenta", "Ilość pamięci RAM", "Procesor", "Dysk", 
+                        "Dodatkowy dysk", "Typ dysku", "Przekątna ekranu", "Rozdzielczość ekranu", "Zainstalowany system"]:
                 val = row.get(col, "<nie dotyczy>")
                 if val and val != "<nie dotyczy>":
                     if col == "Procesor":
@@ -243,7 +235,6 @@ else:
                 return "Laptop " + " ".join(parts)
             else:
                 return row["name"]
-        
         filtered_data["name"] = filtered_data.apply(build_laptop_name, axis=1)
     
     else:
@@ -254,19 +245,21 @@ else:
             default=available_columns
         )
     
-    # Opcjonalna modyfikacja nazwy – dla przykładu, jeżeli użytkownik wpisze dokładnie "zasilacz"
-    if product_name.lower() == "zasilacz":
-        def build_zasilacz_name(row):
-            new_parts = []
-            for col in ["Napięcie", "Typ", "Moc"]:
-                val = str(row.get(col, "")).strip()
-                if val and val not in ("<nie dotyczy>", "<brak danych>"):
-                    new_parts.append(val)
-            if new_parts:
-                return f"{row['name']} {' '.join(new_parts)}"
-            else:
-                return row["name"]
-        filtered_data["name"] = filtered_data.apply(build_zasilacz_name, axis=1)
+    # Na samym końcu – do kolumny "name" dodajemy sufiks na podstawie wartości z kolumny "Kondycja"
+    def append_kondycja_suffix(row):
+        cond = row.get("Kondycja", "").strip()
+        suffix = ""
+        if cond == "A- poleasingowy, przetestowany":
+            suffix = "[A-]"
+        elif cond == "A poleasingowy, przetestowany":
+            suffix = "[A]"
+        elif cond == "B poleasingowy, przetestowany":
+            suffix = "[B]"
+        elif cond == "Powystawowy / Leżak magazynowy":
+            suffix = "[Powystawowy]"
+        return row["name"] + (" " + suffix if suffix else "")
+    
+    filtered_data["name"] = filtered_data.apply(append_kondycja_suffix, axis=1)
     
     if not selected_columns:
         st.error("Wybierz przynajmniej jedną kolumnę.")
