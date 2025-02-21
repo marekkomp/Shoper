@@ -127,7 +127,7 @@ else:
         "Rozdzielczość ekranu", "Przekątna ekranu", "Powłoka matrycy",
         "Rodzaj karty graficznej", "Model karty graficznej", 
         "Złącza zewnętrzne", "Napęd", "Kamera",
-        "Komunikacja", "Bateria", "Klawiatura", "Informacje dodatkowe", "W zestawie:", "Gwarancja"
+        "Komunikacja", "Bateria", "Klawiatura", "Informacje dodatkowe", "W zestawie", "Gwarancja"
     ]
     
     # Wybór widoku kolumn
