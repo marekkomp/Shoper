@@ -103,15 +103,15 @@ else:
     ]
     computers_columns = [
         "id", "price", "stock", "name", "category",
-        "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
+        "Kondycja", "Producent", "Seria procesora", "Stan ekranu",
         "Obudowa", "Stan obudowy", "Gwarancja", "Procesor", "Taktowanie", "Ilość rdzeni",
-        "Gniazdo procesora", "Ilość pamięci RAM", "Typ pamięci RAM", "Dysk", "Dodatkowy dysk", "Typ dysku",
-        "Licencja", "Typ licencji", "Zainstalowany system", "Ekran dotykowy",
-        "Rozdzielczość ekranu", "Przekątna ekranu", "Powłoka matrycy", "Podświetlenie",
+        "Gniazdo procesora", "Ilość pamięci RAM", "Typ pamięci RAM", "Dysk", "Typ dysku",
+        "Licencja", "Typ licencji", "Ekran dotykowy", "Rozdzielczość ekranu", 
+        "Przekątna ekranu", "Powłoka matrycy", "Podświetlenie",
         "Jasność", "Pivot", "Regulacja wysokości", "Regulacja kąta nachylenia",
         "Wbudowany głośnik", "Rodzaj karty graficznej", "Model karty graficznej",
         "Złącza wewnętrzne", "Złącza z tyłu", "Złącza z boku", "Napęd", "Kamera",
-        "Karta Sieciowa", "Komunikacja", "Informacje dodatkowe", "W zestawie:"
+        "Karta Sieciowa", "Informacje dodatkowe", "Kod producenta", "Dodatkowy dysk", "Zainstalowany system", "W zestawie"
     ]
     akcesoria_columns = [
         "id", "price", "stock", "name", "category", "Kondycja", "Stan obudowy", "Kod producenta",
