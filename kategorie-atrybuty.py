@@ -123,11 +123,11 @@ else:
         "Kondycja", "Producent", "Kod producenta", "Seria procesora", "Stan ekranu",
         "Stan obudowy", "Procesor", "Taktowanie", "Ilość rdzeni",
         "Ilość pamięci RAM", "Typ pamięci RAM", "Dysk", "Dodatkowy dysk", "Typ dysku",
-        "Licencja", "Typ licencji", "Zainstalowany system", "Ekran dotykowy",
+        "Licencja", "Typ licencji", "Ekran dotykowy",
         "Rozdzielczość ekranu", "Przekątna ekranu", "Powłoka matrycy",
         "Rodzaj karty graficznej", "Model karty graficznej", 
         "Złącza zewnętrzne", "Napęd", "Kamera",
-        "Komunikacja", "Bateria", "Klawiatura", "Informacje dodatkowe", "W zestawie", "Gwarancja"
+        "Komunikacja", "Bateria", "Klawiatura", "Informacje dodatkowe", "Gwarancja", "Zainstalowany system", "W zestawie" 
     ]
     
     # Wybór widoku kolumn
